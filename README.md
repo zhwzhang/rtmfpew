@@ -1,4 +1,4 @@
-[![baby-gopher](https://raw2.github.com/drnic/babygopher-site/gh-pages/images/babygopher-badge.png)](http://www.babygopher.org)
+[![baby-gopher](http://www.babygopher.org/images/babygopher-badge.png)](http://www.babygopher.org)
 
 RTMFPew
 ========
