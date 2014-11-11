@@ -1,7 +1,6 @@
 [![baby-gopher](http://www.babygopher.org/images/babygopher-badge.png)](http://www.babygopher.org)
 
 ## RTMFPew
-==========
 RTMFP P2P transport implementation in Go.
 
 ### Status
