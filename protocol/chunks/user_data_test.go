@@ -18,38 +18,17 @@ package chunks
 
 import (
 	"bytes"
-	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
 
 func TestUserDataIO(t *testing.T) {
 	Convey("Given a user data chunk", t, func() {
-		t := [...]byte{0x2A, 0xC3, 0xB1, 0x5C, 0xED, 0xEC}
-		opts := [...]UserDataOption{
-			UserDataOption{
-				OptionType: 1,
-				Value:      t[:],
-			}, UserDataOption{
-				OptionType: 2,
-				Value:      t[:],
-			},
-		}
 
-		chnk := &UserDataChunk{
-			Abandon:         true,
-			Final:           false,
-			FlowID:          vlu.Vlu(126),
-			FragmentControl: MiddleFragmentControl,
-			FsnOffset:       vlu.Vlu(12),
-			Options:         opts[:],
-			OptionsPresent:  true,
-			SequenceNumber:  vlu.Vlu(1256),
-			UserData:        t[:],
-		}
+		chnk := UserDataChunkSample()
 
 		buff := bytes.NewBuffer(make([]byte, 0))
-		
+
 		err := chnk.WriteTo(buff)
 		Convey("It can be written into a buffer", func() {
 			So(err, ShouldBeNil)

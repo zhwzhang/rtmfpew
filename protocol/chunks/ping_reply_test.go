@@ -24,10 +24,8 @@ import (
 
 func TestPingReplyIO(t *testing.T) {
 	Convey("Given a ping reply chunk", t, func() {
-		t := [...]byte{0x2A, 0xC3, 0xB1, 0x5C, 0xED, 0xA1}
-		chnk := &PingReplyChunk{
-			messageEcho: t[:],
-		}
+
+		chnk := PingReplyChunkSample()
 
 		buff := bytes.NewBuffer(make([]byte, 0))
 
@@ -45,9 +43,9 @@ func TestPingReplyIO(t *testing.T) {
 
 			err = readChnk.ReadFrom(buff)
 			So(err, ShouldBeNil)
-			
-			for i := range chnk.messageEcho {
-				So(readChnk.messageEcho[i], ShouldEqual, chnk.messageEcho[i])
+
+			for i := range chnk.MessageEcho {
+				So(readChnk.MessageEcho[i], ShouldEqual, chnk.MessageEcho[i])
 			}
 		})
 	})

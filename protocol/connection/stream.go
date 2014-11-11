@@ -14,5 +14,4 @@
 // limitations under the License.
 //
 
-package net
-
+package connection

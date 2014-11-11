@@ -24,12 +24,8 @@ import (
 
 func TestResponderInitialKeyingIO(t *testing.T) {
 	Convey("Given a responder initial keying chunk", t, func() {
-		t := [...]byte{0x2A, 0xC3, 0xB1, 0x5C, 0xED, 0xA2, 0x18, 0xA1, 0xB2}
-		chnk := &ResponderInitialKeyingChunk{
-			ResponderSessionID:           23812,
-			SessionKeyResponderComponent: t[:],
-			Signature:                    t[:],
-		}
+
+		chnk := ResponderInitialKeyingChunkSample()
 
 		buff := bytes.NewBuffer(make([]byte, 0))
 

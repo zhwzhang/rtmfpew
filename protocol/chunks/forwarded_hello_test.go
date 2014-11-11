@@ -18,25 +18,14 @@ package chunks
 
 import (
 	"bytes"
-	. "github.com/rtmfpew/rtmfpew/protocol/net"
 	. "github.com/smartystreets/goconvey/convey"
-	"net"
 	"testing"
 )
 
 func TestForwardedHelloIO(t *testing.T) {
 	Convey("Given a forworded hello chunk", t, func() {
 
-		addr, _ := net.ResolveUDPAddr("udp", "192.168.1.1:1935")
-
-		epd := [...]byte{0x91, 0xF1, 0xAA, 0xBC, 0xAD}
-		tag := [...]byte{0x1A, 0xB2, 0xBA, 0xDC, 0xED}
-
-		chnk := &ForwardedHelloChunk{
-			Epd:          epd[:],
-			Tag:          tag[:],
-			ReplyAddress: *PeerAddressFrom(addr),
-		}
+		chnk := ForwardedHelloChunkSample()
 
 		buff := bytes.NewBuffer(make([]byte, 0))
 

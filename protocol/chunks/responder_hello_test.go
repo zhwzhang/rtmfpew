@@ -24,21 +24,17 @@ import (
 
 func TestResponderHelloIO(t *testing.T) {
 	Convey("Given a responder hello chunk", t, func() {
-		t := [...]byte{0x2A, 0xC3, 0xB1, 0x5C, 0xED, 0xA2, 0x18, 0xA1, 0xB2, 0x6F}
-		chnk := &ResponderHelloChunk{
-			cookie:               t[:],
-			responderCertificate: t[:],
-			tagEcho:              t[:],
-		}
+
+		chnk := ResponderHelloChunkSample()
 
 		buff := bytes.NewBuffer(make([]byte, 0))
 
 		err := chnk.WriteTo(buff)
 		Convey("It can be written into a buffer", func() {
 			So(err, ShouldBeNil)
-			
+
 		})
-		
+
 		Convey("It can be read back from the buffer", func() {
 			readChnk := &ResponderHelloChunk{}
 			typ, err := buff.ReadByte()
@@ -48,17 +44,17 @@ func TestResponderHelloIO(t *testing.T) {
 
 			err = readChnk.ReadFrom(buff)
 			So(err, ShouldBeNil)
-			
-			for i := range chnk.cookie {
-				So(readChnk.cookie[i], ShouldEqual, chnk.cookie[i])
+
+			for i := range chnk.Cookie {
+				So(readChnk.Cookie[i], ShouldEqual, chnk.Cookie[i])
 			}
-			
-			for i := range chnk.responderCertificate {
-				So(readChnk.responderCertificate[i], ShouldEqual, chnk.responderCertificate[i])
+
+			for i := range chnk.ResponderCertificate {
+				So(readChnk.ResponderCertificate[i], ShouldEqual, chnk.ResponderCertificate[i])
 			}
-			
-			for i := range chnk.tagEcho {
-				So(readChnk.tagEcho[i], ShouldEqual, chnk.tagEcho[i])
+
+			for i := range chnk.TagEcho {
+				So(readChnk.TagEcho[i], ShouldEqual, chnk.TagEcho[i])
 			}
 		})
 	})

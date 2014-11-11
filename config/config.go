@@ -23,7 +23,8 @@ import (
 type configValues struct {
 	Mtu                 uint
 	MaxFragmentationGap uint
-	MaxFragments        uint
+	MaxFragments        int
+	MaxFragmentsSize    uint16
 }
 
 var values = &configValues{
@@ -48,6 +49,10 @@ func MaxFragmentationGap() uint {
 }
 
 // MaxFragments returns max number of packet fragments
-func MaxFragments() uint {
+func MaxFragments() int {
 	return values.MaxFragments
+}
+
+func MaxFragmentsSize() uint16 {
+	return values.MaxFragmentsSize
 }

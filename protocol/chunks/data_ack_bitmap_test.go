@@ -18,24 +18,14 @@ package chunks
 
 import (
 	"bytes"
-	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
 
 func TestDataAckBitmapIO(t *testing.T) {
 	Convey("Given a data ack bitmap chunk", t, func() {
-		sl := [...]byte{
-			0x16, 0x11, 0x1A, 0x3A,
-			0x1B, 0x5C, 0xAC, 0x7E,
-		}
 
-		chnk := &DataAcknowledgementBitmapChunk{
-			FlowID:                vlu.Vlu(19872),
-			BufferBlocksAvailable: vlu.Vlu(1141),
-			CumulativeAck:         vlu.Vlu(391),
-			Acknowledgement:       sl[:],
-		}
+		chnk := DataAcknowledgementBitmapChunkSample()
 
 		buff := bytes.NewBuffer(make([]byte, 0))
 

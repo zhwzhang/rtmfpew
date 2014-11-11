@@ -26,7 +26,7 @@ const PingReplyChunkType = 0x41
 
 // PingReplyChunk is sent as response on Ping
 type PingReplyChunk struct {
-	messageEcho []byte
+	MessageEcho []byte
 }
 
 // Type returns PingReplyChunk type opcode
@@ -35,7 +35,7 @@ func (chnk *PingReplyChunk) Type() byte {
 }
 
 func (chnk *PingReplyChunk) Len() uint16 {
-	return uint16(1 + len(chnk.messageEcho))
+	return uint16(1 + len(chnk.MessageEcho))
 }
 
 func (chnk *PingReplyChunk) WriteTo(buffer *bytes.Buffer) error {
@@ -51,7 +51,7 @@ func (chnk *PingReplyChunk) WriteTo(buffer *bytes.Buffer) error {
 	}
 
 	// Contents
-	if _, err = buffer.Write(chnk.messageEcho); err != nil {
+	if _, err = buffer.Write(chnk.MessageEcho); err != nil {
 		return err
 	}
 
@@ -67,8 +67,8 @@ func (chnk *PingReplyChunk) ReadFrom(buffer *bytes.Buffer) error {
 		return err
 	}
 
-	chnk.messageEcho = make([]byte, length)
-	num, err := buffer.Read(chnk.messageEcho)
+	chnk.MessageEcho = make([]byte, length)
+	num, err := buffer.Read(chnk.MessageEcho)
 
 	if err != nil {
 		return err

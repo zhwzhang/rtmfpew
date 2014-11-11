@@ -20,8 +20,8 @@ import (
 	"bytes"
 	"container/list"
 	"encoding/binary"
+	"github.com/rtmfpew/rtmfpew/protocol/connection"
 	"github.com/rtmfpew/rtmfpew/protocol/vlu"
-	. "github.com/rtmfpew/rtmfpew/protocol/net"
 )
 
 const ResponderRedirectChunkType = 0x71
@@ -29,7 +29,7 @@ const ResponderRedirectChunkType = 0x71
 // ResponderRedirectChunk is sent as response on InitiatorHello or ForwardedHello in startup mode
 type ResponderRedirectChunk struct {
 	TagEcho             []byte
-	RedirectDestination []PeerAddress
+	RedirectDestination []connection.PeerAddress
 }
 
 // Type returns ResponderRedirectChunk type opcode
@@ -40,11 +40,11 @@ func (chnk *ResponderRedirectChunk) Type() byte {
 func (chnk *ResponderRedirectChunk) Len() uint16 {
 	TagEchoVlu := vlu.Vlu(len(chnk.TagEcho))
 	destinationsLength := 0
-	
+
 	for _, destination := range chnk.RedirectDestination {
 		destinationsLength += destination.Length()
 	}
-	
+
 	return uint16(1 +
 		TagEchoVlu.ByteLength() +
 		len(chnk.TagEcho) +
@@ -97,7 +97,7 @@ func (chnk *ResponderRedirectChunk) ReadFrom(buffer *bytes.Buffer) error {
 
 	totalRead := 0
 	for totalRead < destinationsLength {
-		addr := new(PeerAddress)
+		addr := &connection.PeerAddress{}
 		if err = addr.ReadFrom(buffer); err != nil {
 			return err
 		}
@@ -106,11 +106,11 @@ func (chnk *ResponderRedirectChunk) ReadFrom(buffer *bytes.Buffer) error {
 		totalRead += (*addr).Length()
 	}
 
-	chnk.RedirectDestination = make([]PeerAddress, destinationsList.Len())
+	chnk.RedirectDestination = make([]connection.PeerAddress, destinationsList.Len())
 	i := 0
 	for dest := destinationsList.Front(); dest != nil; dest = dest.Next() {
-		chnk.RedirectDestination[i] = *dest.Value.(*PeerAddress)
-		i += 1
+		chnk.RedirectDestination[i] = *dest.Value.(*connection.PeerAddress)
+		i++
 	}
 
 	return nil

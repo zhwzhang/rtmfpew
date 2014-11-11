@@ -26,9 +26,9 @@ const ResponderHelloChunkType = 0x70
 
 // ResponderHelloChunk is sent as a response on InitiatorHelloChunk
 type ResponderHelloChunk struct {
-	tagEcho              []byte
-	cookie               []byte
-	responderCertificate []byte
+	TagEcho              []byte
+	Cookie               []byte
+	ResponderCertificate []byte
 }
 
 // Type returns ResponderHelloChunk type opcode
@@ -37,15 +37,15 @@ func (chnk *ResponderHelloChunk) Type() byte {
 }
 
 func (chnk *ResponderHelloChunk) Len() uint16 {
-	tagEchoVlu := vlu.Vlu(len(chnk.tagEcho))
-	cookieVlu := vlu.Vlu(len(chnk.cookie))
-	
+	TagEchoVlu := vlu.Vlu(len(chnk.TagEcho))
+	CookieVlu := vlu.Vlu(len(chnk.Cookie))
+
 	return uint16(1 +
-		tagEchoVlu.ByteLength() +
-		len(chnk.tagEcho) +
-		cookieVlu.ByteLength() +
-		len(chnk.cookie) +
-		len(chnk.responderCertificate))
+		TagEchoVlu.ByteLength() +
+		len(chnk.TagEcho) +
+		CookieVlu.ByteLength() +
+		len(chnk.Cookie) +
+		len(chnk.ResponderCertificate))
 }
 
 func (chnk *ResponderHelloChunk) WriteTo(buffer *bytes.Buffer) error {
@@ -61,15 +61,15 @@ func (chnk *ResponderHelloChunk) WriteTo(buffer *bytes.Buffer) error {
 	}
 
 	// Contents
-	if err = vlu.WriteVluBytesTo(buffer, chnk.tagEcho); err != nil {
+	if err = vlu.WriteVluBytesTo(buffer, chnk.TagEcho); err != nil {
 		return err
 	}
 
-	if err = vlu.WriteVluBytesTo(buffer, chnk.cookie); err != nil {
+	if err = vlu.WriteVluBytesTo(buffer, chnk.Cookie); err != nil {
 		return err
 	}
 
-	if _, err = buffer.Write(chnk.responderCertificate); err != nil {
+	if _, err = buffer.Write(chnk.ResponderCertificate); err != nil {
 		return err
 	}
 
@@ -86,23 +86,23 @@ func (chnk *ResponderHelloChunk) ReadFrom(buffer *bytes.Buffer) error {
 	}
 	// Contents
 	tagLength := byte(0)
-	if tagLength, chnk.tagEcho, err = vlu.ReadVluBytesFrom(buffer); err != nil {
+	if tagLength, chnk.TagEcho, err = vlu.ReadVluBytesFrom(buffer); err != nil {
 		return err
 	}
 
-	cookieLength := byte(0)
-	if cookieLength, chnk.cookie, err = vlu.ReadVluBytesFrom(buffer); err != nil {
+	CookieLength := byte(0)
+	if CookieLength, chnk.Cookie, err = vlu.ReadVluBytesFrom(buffer); err != nil {
 		return err
 	}
 
 	certificateLength := (int(length) -
 		int(tagLength) -
-		len(chnk.tagEcho) -
-		int(cookieLength) -
-		len(chnk.cookie))
+		len(chnk.TagEcho) -
+		int(CookieLength) -
+		len(chnk.Cookie))
 
-	chnk.responderCertificate = make([]byte, certificateLength)
-	num, err := buffer.Read(chnk.responderCertificate)
+	chnk.ResponderCertificate = make([]byte, certificateLength)
+	num, err := buffer.Read(chnk.ResponderCertificate)
 
 	if err != nil {
 		return err

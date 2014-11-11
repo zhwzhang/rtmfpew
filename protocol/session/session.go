@@ -24,9 +24,9 @@ import (
 	"errors"
 	"github.com/rtmfpew/rtmfpew/config"
 	"github.com/rtmfpew/rtmfpew/protocol/chunks"
+	"github.com/rtmfpew/rtmfpew/protocol/connection"
 	"github.com/rtmfpew/rtmfpew/protocol/crypto"
 	"github.com/rtmfpew/rtmfpew/protocol/ip"
-	"github.com/rtmfpew/rtmfpew/protocol/net"
 	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 	"sync/atomic"
 )
@@ -35,27 +35,22 @@ var (
 	packetMtu           = config.Mtu()
 	maxFragmentationGap = config.MaxFragmentationGap()
 	maxFragments        = config.MaxFragments()
+	maxFragmentsSize    = config.MaxFragmentsSize()
 )
 
-const (
-	// NormalSession is a client-server
-	NormalSession = 1 << (iota)
-	// ForwardedSession is a NAT traversed session
-	ForwardedSession
-	// RedirectedSession is a peer redirected session
-	RedirectedSession
-	// RendezvousSession is a P2P session
-	RendezvousSession
-	// HandshakeSession is an initial session handshake
-	HandshakeSession
-)
+// SessionType stores current session state and validates it's changes
+type SessionType interface {
+	IsValidChunkType() uint8
+	GotChunkType(uint8)
+	NextType() *SessionType
+}
 
 // Session stores current connection state
 type Session struct {
 	ID uint32
 
-	InitiatorAddr *net.PeerAddress
-	ResponderAddr *net.PeerAddress
+	InitiatorAddr *connection.PeerAddress
+	ResponderAddr *connection.PeerAddress
 
 	profile crypto.Profile
 
@@ -65,28 +60,32 @@ type Session struct {
 	HasChecksums bool
 	Established  bool
 
-	fragments *list.List
+	fragments     map[vlu.Vlu]*list.List
+	fragmentSizes map[vlu.Vlu]uint16
+
+	Type SessionType
 }
 
-// NewSessionWith creates new session with custom profile
-func NewSessionWith(profile crypto.Profile) *Session {
+// NewWith creates new session with custom profile
+func NewWith(profile crypto.Profile, t SessionType) *Session {
 	session := &Session{
 		profile:      profile,
 		pcktCounter:  0,
 		mtu:          uint16(packetMtu),
 		HasChecksums: false,
 		Established:  false,
+		Type:         t,
 	}
 
 	return session
 }
 
-// NewSession creates new session with default profile
-func NewSession() *Session {
+// New creates new session with default profile
+func New(t SessionType) *Session {
 	profile := &crypto.DefaultProfile{}
 	profile.InitDefault()
 
-	return NewSessionWith(profile)
+	return NewWith(profile, t)
 }
 
 // SetEncryptionKey for data cipher
@@ -206,115 +205,6 @@ func (session *Session) defragmentChunks(chnks *list.List) (*list.List, error) {
 	return l.Chunks, err
 }
 
-func (session *Session) removeFragmentsWithPacketID(packetID vlu.Vlu) {
-	for sessionFragment := session.fragments.Front(); sessionFragment != nil; sessionFragment.Next() {
-		if sessionFragment.Value.(chunks.FragmentChunk).PacketID == packetID {
-			session.fragments.Remove(sessionFragment)
-		}
-	}
-}
-
-func (session *Session) chunksToDefragment() *list.List {
-	if session.fragments.Len() == 0 {
-		return nil
-	}
-
-	packets := list.New()
-
-	// Count packet IDs
-	for fragment := session.fragments.Front(); fragment != nil; fragment.Next() {
-		found := false
-		for packet := packets.Front(); packet != nil; packet.Next() {
-			if found = packet.Value.(vlu.Vlu) == fragment.Value.(chunks.FragmentChunk).PacketID; found {
-				break
-			}
-		}
-
-		if !found {
-			packets.PushBack(fragment.Value.(chunks.FragmentChunk).PacketID)
-		}
-	}
-
-	// Group packet fragments
-	packetFragments := make(map[vlu.Vlu]*list.List)
-	for packet := packets.Front(); packet != nil; packet.Next() {
-		packetFragments[packet.Value.(vlu.Vlu)] = list.New()
-		for fragment := session.fragments.Front(); fragment != nil; fragment.Next() {
-			if packet.Value.(vlu.Vlu) == fragment.Value.(chunks.FragmentChunk).PacketID {
-				packetFragments[packet.Value.(vlu.Vlu)].PushBack(fragment)
-			}
-		}
-
-		if packetFragments[packet.Value.(vlu.Vlu)].Len() > int(maxFragments) {
-			session.removeFragmentsWithPacketID(packet.Value.(vlu.Vlu))
-		}
-	}
-
-	// Naive fragments sorting
-	for packetID, fragments := range packetFragments {
-		firstFragment := fragments.Front()
-		secondFragment := fragments.Front()
-		secondFragment.Next()
-
-		if secondFragment != nil {
-			permutations := 0
-			for {
-				if secondFragment != nil {
-					// Delete duplicates
-					if firstFragment.Value.(chunks.FragmentChunk).FragmentNum == secondFragment.Value.(chunks.FragmentChunk).FragmentNum {
-						fragments.Remove(firstFragment)
-						permutations++
-					} else {
-						if firstFragment.Value.(chunks.FragmentChunk).FragmentNum > secondFragment.Value.(chunks.FragmentChunk).FragmentNum {
-							fragments.MoveAfter(firstFragment, secondFragment)
-							permutations++
-						} else {
-							// Corrupted packet
-							fragmentationGap := secondFragment.Value.(chunks.FragmentChunk).FragmentNum - firstFragment.Value.(chunks.FragmentChunk).FragmentNum
-
-							if fragmentationGap != 1 && fragmentationGap >= vlu.Vlu(maxFragmentationGap) {
-								session.removeFragmentsWithPacketID(packetID)
-								delete(packetFragments, packetID)
-							}
-
-							return nil
-						}
-					}
-
-					firstFragment.Next()
-					secondFragment.Next()
-				} else {
-					firstFragment = fragments.Front()
-					secondFragment = fragments.Front()
-					secondFragment.Next()
-					if permutations == 0 {
-						break
-					} else {
-						permutations = 0
-					}
-				}
-			}
-
-			if !fragments.Back().Value.(chunks.FragmentChunk).MoreFragments {
-				session.removeFragmentsWithPacketID(packetID)
-				delete(packetFragments, packetID)
-				return fragments
-			}
-
-		} else {
-
-			// Only one fragment ?
-			if !firstFragment.Value.(chunks.FragmentChunk).MoreFragments {
-				session.removeFragmentsWithPacketID(packetID)
-				delete(packetFragments, packetID)
-				return fragments
-			}
-		}
-	}
-
-	return nil
-}
-
 // WritePacket Writes packet into the byte buffer
 func (session *Session) WritePacket(pckt Packet, buff *bytes.Buffer) error {
 
@@ -391,6 +281,10 @@ func (session *Session) ReadPacket(buff *bytes.Buffer) (*Packet, error) {
 		return pckt, err
 	}
 
+	if pckt.Mode < ResponderMode {
+		return pckt, errors.New("Only Responder and Startup packet modes are allowed")
+	}
+
 	datalen := uint16(0)
 
 	typ := byte(0)
@@ -458,22 +352,43 @@ func (session *Session) ReadPacket(buff *bytes.Buffer) (*Packet, error) {
 			if err = c.ReadFrom(buff); err != nil {
 				return pckt, err
 			}
-			session.fragments.PushBack(c)
 
-			fragments := session.chunksToDefragment()
-			if fragments == nil {
-				fragments = session.chunksToDefragment()
+			if session.fragments[c.PacketID] == nil {
+				session.fragments[c.PacketID] = list.New()
 			}
 
-			if fragments != nil {
-				chnks, err := session.defragmentChunks(fragments)
+			if c.FragmentNum < session.fragments[c.PacketID].Back().Value.(chunks.FragmentChunk).FragmentNum {
+				for fragment := session.fragments[c.PacketID].Front(); fragment != nil; fragment.Next() {
+					if fragment.Value.(chunks.FragmentChunk).FragmentNum > c.FragmentNum {
+						session.fragments[c.PacketID].InsertBefore(c, fragment)
+						break
+					}
+				}
+			} else {
+				session.fragments[c.PacketID].PushBack(c)
+			}
+
+			session.fragmentSizes[c.PacketID] += c.Len()
+
+			if session.fragments[c.PacketID].Len() > maxFragments {
+				delete(session.fragments, c.PacketID)
+				delete(session.fragmentSizes, c.PacketID)
+				return nil, errors.New("Too many fragments in the packet")
+			}
+
+			if session.fragmentSizes[c.PacketID] > maxFragmentsSize {
+				delete(session.fragments, c.PacketID)
+				delete(session.fragmentSizes, c.PacketID)
+				return nil, errors.New("Too long fragmentated packet")
+			}
+
+			if !c.MoreFragments {
+				pckt.Chunks, err = session.defragmentChunks(session.fragments[c.PacketID])
 				if err != nil {
 					return pckt, err
 				}
 
-				for chunk := chnks.Front(); chunk != nil; chunk.Next() {
-					pckt.Chunks.PushBack(chunk.Value.(chunks.FragmentChunk))
-				}
+				return pckt, nil
 			}
 
 			datalen += c.Len()

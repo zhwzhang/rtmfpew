@@ -22,15 +22,10 @@ import (
 	"testing"
 )
 
-
 func TestHelloCookieChangeIO(t *testing.T) {
 	Convey("Given a hello cookie change chunk", t, func() {
-		oldC := [...]byte{0x11, 0xBA, 0x2A, 0xEF, 0xA1}
-		newC := [...]byte{0x12, 0x9A, 0x1A, 0xFD, 0x91}
-		chnk := &HelloCookieChangeChunk{
-			OldCookie: oldC[:],
-			NewCookie: newC[:],
-		}
+
+		chnk := HelloCookieChangeChunkSample()
 
 		buff := bytes.NewBuffer(make([]byte, 0))
 

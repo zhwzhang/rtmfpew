@@ -24,13 +24,8 @@ import (
 
 func TestInitiatorHelloIO(t *testing.T) {
 	Convey("Given a initiator hello chunk", t, func() {
-		epd := [...]byte{0x91, 0xF1, 0xAA, 0xBC, 0xAD}
-		tag := [...]byte{0x1A, 0xB2, 0xBA, 0xDC, 0xED}
 
-		chnk := &InitiatorHelloChunk{
-			Epd: epd[:],
-			Tag: tag[:],
-		}
+		chnk := InitiatorHelloChunkSample()
 
 		buff := bytes.NewBuffer(make([]byte, 0))
 

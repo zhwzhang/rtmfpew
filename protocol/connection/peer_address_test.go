@@ -14,7 +14,7 @@
 // limitations under the License.
 //
 
-package net
+package connection
 
 import (
 	"bytes"
@@ -62,7 +62,7 @@ func TestPeerAddressIO(t *testing.T) {
 			So(newAddr4.Port, ShouldEqual, addr4.Port)
 			So(newAddr4.Origin, ShouldEqual, addr4.Origin)
 		})
-		
+
 		Convey("Should read IPv6 address", func() {
 			newAddr16 := &PeerAddress{}
 			newAddr16.ReadFrom(buff16)

@@ -18,7 +18,6 @@ package chunks
 
 import (
 	"bytes"
-	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
@@ -26,13 +25,7 @@ import (
 func TestFragmentIO(t *testing.T) {
 	Convey("Given a fragment chunk", t, func() {
 
-		frag := [...]byte{0x12, 0x9A, 0x1A, 0xFF}
-		chnk := &FragmentChunk{
-			MoreFragments: true,
-			PacketID:      vlu.Vlu(123),
-			FragmentNum:   vlu.Vlu(231),
-			Fragment:      frag[:],
-		}
+		chnk := FragmentChunkSample()
 
 		buff := bytes.NewBuffer(make([]byte, 0))
 

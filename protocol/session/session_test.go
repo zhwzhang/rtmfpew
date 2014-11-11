@@ -23,6 +23,26 @@ import (
 
 func TestSessionChunksFragmentation(t *testing.T) {
 	Convey("Given a set of chunks", t, func() {
+		// chunks := []Chunk{}
 
+		Convey("They should be fragmented properly", func() {
+
+		})
+
+		Convey("Fragements should be sorted", func() {
+
+		})
+
+		Convey("And defragmented back", func() {
+
+		})
+
+		Convey("Packet should be written properly", func() {
+
+		})
+
+		Convey("And read back", func() {
+
+		})
 	})
 }

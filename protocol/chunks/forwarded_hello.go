@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"github.com/rtmfpew/rtmfpew/protocol/net"
+	"github.com/rtmfpew/rtmfpew/protocol/connection"
 	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 )
 
@@ -29,7 +29,7 @@ const ForwardedHelloChunkType = 0x0f
 // ForwardedHelloChunk is a forwarded InitiatorHello
 type ForwardedHelloChunk struct {
 	Epd          []byte
-	ReplyAddress net.PeerAddress
+	ReplyAddress connection.PeerAddress
 	Tag          []byte
 }
 

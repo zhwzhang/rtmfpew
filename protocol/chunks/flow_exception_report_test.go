@@ -1,4 +1,3 @@
-
 // Copyright 2014 RTMFPew
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,17 +17,13 @@ package chunks
 
 import (
 	"bytes"
-	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
 
 func TestFlowExceptionReportIO(t *testing.T) {
 	Convey("Given a flow exception report chunk", t, func() {
-		chnk := &FlowExceptionReportChunk{
-			FlowID:    vlu.Vlu(182),
-			Exception: vlu.Vlu(161),
-		}
+		chnk := FlowExceptionReportChunkSample()
 
 		buff := bytes.NewBuffer(make([]byte, 0))
 

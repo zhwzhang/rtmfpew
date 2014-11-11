@@ -86,10 +86,10 @@ func (profile *DefaultProfile) ChecksumLen() int {
 // EncryptAt encrupts buffer with specified block cipher
 func (profile *DefaultProfile) EncryptAt(data *bytes.Buffer, offset int) error {
 	if profile.blockCipher != nil {
-		encryptedBuf := make([]byte, len(data.Bytes())+offset)
+		encryptedBuf := make([]byte, len(data.Bytes())-offset)
 
-		profile.blockCipher.Encrypt(encryptedBuf[offset:], data.Bytes()[offset:])
-		copy(data.Bytes()[offset:], encryptedBuf[offset:])
+		profile.blockCipher.Encrypt(encryptedBuf, data.Bytes()[offset:])
+		copy(data.Bytes()[offset:], encryptedBuf)
 
 		return nil
 	}
@@ -100,10 +100,10 @@ func (profile *DefaultProfile) EncryptAt(data *bytes.Buffer, offset int) error {
 // DecryptAt decrypts buffer with specified block cipher starting at offset
 func (profile *DefaultProfile) DecryptAt(data *bytes.Buffer, offset int) error {
 	if profile.blockCipher != nil {
-		decryptedBuff := make([]byte, len(data.Bytes())+offset)
+		decryptedBuff := make([]byte, len(data.Bytes())-offset)
 
 		profile.blockCipher.Decrypt(decryptedBuff, data.Bytes()[offset:])
-		copy(data.Bytes()[offset:], decryptedBuff[offset:])
+		copy(data.Bytes()[offset:], decryptedBuff)
 
 		return nil
 	}

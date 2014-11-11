@@ -24,7 +24,8 @@ import (
 
 func TestSessionCloseRequestIO(t *testing.T) {
 	Convey("Given a session close request chunk", t, func() {
-		chnk := &SessionCloseRequestChunk{}
+		chnk := SessionCloseRequestChunkSample()
+
 		buff := bytes.NewBuffer(make([]byte, 0))
 
 		err := chnk.WriteTo(buff)

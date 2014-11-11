@@ -24,7 +24,7 @@ import (
 
 func TestSessionCloseAckIO(t *testing.T) {
 	Convey("Given a session close ack chunk", t, func() {
-		chnk := &SessionCloseAcknowledgement{}
+		chnk := SessionCloseAcknowledgementSample()
 
 		buff := bytes.NewBuffer(make([]byte, 0))
 

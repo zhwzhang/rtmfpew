@@ -16,5 +16,12 @@
 
 package session
 
-type Handshake struct {
+const (
+	handshakeHelloState = 0
+	handshakeKeyingState
+)
+
+// HandshakeSessionType stores handshake state and validates chunk types
+type HandshakeSessionType struct {
+	state uint16
 }

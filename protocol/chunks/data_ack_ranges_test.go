@@ -18,35 +18,14 @@ package chunks
 
 import (
 	"bytes"
-	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
 
 func TestDataAckRangesIO(t *testing.T) {
 	Convey("Given a data ack bitmap chunk", t, func() {
-		ranges := [...]DataAcknowledgementRange{
-			DataAcknowledgementRange{
-				HolesMinusOne:    vlu.Vlu(141),
-				ReceivedMinusOne: vlu.Vlu(1492351),
-			}, DataAcknowledgementRange{
-				HolesMinusOne:    vlu.Vlu(1112),
-				ReceivedMinusOne: vlu.Vlu(119),
-			}, DataAcknowledgementRange{
-				HolesMinusOne:    vlu.Vlu(10131),
-				ReceivedMinusOne: vlu.Vlu(109),
-			}, DataAcknowledgementRange{
-				HolesMinusOne:    vlu.Vlu(151),
-				ReceivedMinusOne: vlu.Vlu(1191),
-			},
-		}
 
-		chnk := &DataAcknowledgementRangesChunk{
-			FlowID:                vlu.Vlu(1831),
-			CumulativeAck:         vlu.Vlu(119),
-			BufferBlocksAvailable: vlu.Vlu(284),
-			Ranges:                ranges[:],
-		}
+		chnk := DataAcknowledgementRangesChunkSample()
 
 		buff := bytes.NewBuffer(make([]byte, 0))
 

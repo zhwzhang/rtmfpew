@@ -18,34 +18,14 @@ package chunks
 
 import (
 	"bytes"
-	. "github.com/rtmfpew/rtmfpew/protocol/net"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
 
 func TestResponderRedirectIO(t *testing.T) {
 	Convey("Given a responder redirect chunk", t, func() {
-		t := [...]byte{0x2A, 0xC3, 0xB1, 0x5C}
-		a := [...]PeerAddress{
-			PeerAddress{
-				IP:     t[:],
-				Port:   2913,
-				Origin: RemoteOrigin,
-			}, PeerAddress{
-				IP:     t[:],
-				Port:   2911,
-				Origin: ProxyOrigin,
-			}, PeerAddress{
-				IP:     t[:],
-				Port:   2912,
-				Origin: LocalOrigin,
-			},
-		}
 
-		chnk := &ResponderRedirectChunk{
-			RedirectDestination: a[:],
-			TagEcho:             t[:],
-		}
+		chnk := ResponderRedirectChunkSample()
 
 		buff := bytes.NewBuffer(make([]byte, 0))
 

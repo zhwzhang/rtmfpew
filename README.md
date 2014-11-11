@@ -1,18 +1,20 @@
 [![baby-gopher](http://www.babygopher.org/images/babygopher-badge.png)](http://www.babygopher.org)
 
-RTMFPew
-========
-
-RTMFP transport implementation in Go.
+## RTMFPew
+==========
+RTMFP P2P transport implementation in Go.
 
 ### Status
-What's TBD
+
+#### It's NOT working yet
+
+#### What's TBD
  - [x] Data chunks processing & tests
- - [ ] Session handling
+ - [x] Session handling
  - [ ] NetGroup & NetStream API
- - [ ] Data transmission & tests
- - [ ] RFC7016 compilant tests
- - [ ] Tesing in live flash client
+ - [ ] Data transmission tests
+ - [ ] RFC7016 compliant tests
+ - [ ] Echo testing with live flash client
  - [ ] Profiling & load-testing
  - [ ] Fuzzing
 

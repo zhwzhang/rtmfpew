@@ -154,7 +154,3 @@ func (pckt *Packet) writePaddingTo(buffer *bytes.Buffer) error {
 
 	return binary.Write(buffer, binary.BigEndian, padding)
 }
-
-func (pckt *Packet) ProccessChunks() {
-
-}

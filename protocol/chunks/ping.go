@@ -24,9 +24,9 @@ import (
 
 const PingChunkType = 0x01
 
-// PingChunk is a simple ping message
+// PingChunk is a simple ping Message
 type PingChunk struct {
-	message []byte
+	Message []byte
 }
 
 // Type returns PingChunk type opcode
@@ -35,7 +35,7 @@ func (chnk *PingChunk) Type() byte {
 }
 
 func (chnk *PingChunk) Len() uint16 {
-	return uint16(1 + len(chnk.message))
+	return uint16(1 + len(chnk.Message))
 }
 
 func (chnk *PingChunk) WriteTo(buffer *bytes.Buffer) error {
@@ -51,7 +51,7 @@ func (chnk *PingChunk) WriteTo(buffer *bytes.Buffer) error {
 	}
 
 	// Contents
-	if _, err = buffer.Write(chnk.message); err != nil {
+	if _, err = buffer.Write(chnk.Message); err != nil {
 		return err
 	}
 
@@ -68,15 +68,15 @@ func (chnk *PingChunk) ReadFrom(buffer *bytes.Buffer) error {
 	}
 
 	// Contents
-	chnk.message = make([]byte, length)
-	num, err := buffer.Read(chnk.message)
+	chnk.Message = make([]byte, length)
+	num, err := buffer.Read(chnk.Message)
 
 	if err != nil {
 		return err
 	}
 
 	if num < int(length) {
-		return errors.New("Can't read ping chunk message")
+		return errors.New("Can't read ping chunk Message")
 	}
 
 	return nil

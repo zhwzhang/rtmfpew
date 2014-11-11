@@ -24,14 +24,8 @@ import (
 
 func TestInitiatorInitialKeyingIO(t *testing.T) {
 	Convey("Given a initiator initial keying chunk", t, func() {
-		t := [...]byte{0x2A, 0xC3, 0xB1, 0x5C, 0xED, 0xA1}
-		chnk := &InitiatorInitialKeyingChunk{
-			CookieEcho:                   t[:],
-			InitiatorCertificate:         t[:],
-			InitiatorSessionID:           112,
-			SessionKeyInitiatorComponent: t[:],
-			Signature:                    t[:],
-		}
+
+		chnk := InitiatorInitialKeyingChunkSample()
 
 		buff := bytes.NewBuffer(make([]byte, 0))
 
