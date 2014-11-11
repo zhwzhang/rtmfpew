@@ -35,7 +35,7 @@ func serverlessMode() (*protocol.Context, error) {
 	}
 
 	ctx := &protocol.Context{}
-	
+
 	return ctx, nil
 }
 
@@ -51,9 +51,9 @@ func clientMode(host string) (*protocol.Context, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	ctx := &protocol.Context{}
-	
+
 	return ctx, nil
 }
 
@@ -71,6 +71,6 @@ func serverMode(host string) (*protocol.Context, error) {
 	}
 
 	ctx := &protocol.Context{}
-	
+
 	return ctx, nil
 }

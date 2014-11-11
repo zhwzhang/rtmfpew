@@ -17,5 +17,5 @@
 package rtmfp
 
 import (
-	"github.com/rtmfpew/rtmfpew/protocol/io"
+	"github.com/rtmfpew/rtmfpew/protocol"
 )

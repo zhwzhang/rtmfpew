@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"container/list"
 	"encoding/binary"
-	"github.com/rtmfpew/rtmfpew/protocol/io"
+	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 )
 
 const DataAcknowledgementRangesChunkType = 0x51
@@ -28,15 +28,15 @@ const DataAcknowledgementRangesChunkType = 0x51
 // DataAcknowledgementRange indicates what UserData fragments had been recieved.
 // Is a part of DataAcknowledgementRangeChunk
 type DataAcknowledgementRange struct {
-	HolesMinusOne    io.Vlu
-	ReceivedMinusOne io.Vlu
+	HolesMinusOne    vlu.Vlu
+	ReceivedMinusOne vlu.Vlu
 }
 
 // DataAcknowledgementRangesChunk is sent to indicate UserData fragments have been recieved for one flow.
 type DataAcknowledgementRangesChunk struct {
-	FlowID                io.Vlu
-	BufferBlocksAvailable io.Vlu
-	CumulativeAck         io.Vlu
+	FlowID                vlu.Vlu
+	BufferBlocksAvailable vlu.Vlu
+	CumulativeAck         vlu.Vlu
 
 	Ranges []DataAcknowledgementRange
 }
@@ -122,8 +122,8 @@ func (chnk *DataAcknowledgementRangesChunk) ReadFrom(buffer *bytes.Buffer) error
 
 	i := rangesLen
 	for i > 0 {
-		holes := io.Vlu(0)
-		recv := io.Vlu(0)
+		holes := vlu.Vlu(0)
+		recv := vlu.Vlu(0)
 
 		if err = holes.ReadFrom(buffer); err != nil {
 			break

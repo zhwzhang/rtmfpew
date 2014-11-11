@@ -18,7 +18,7 @@ package chunks
 
 import (
 	"bytes"
-	"github.com/rtmfpew/rtmfpew/protocol/io"
+	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
@@ -39,12 +39,12 @@ func TestUserDataIO(t *testing.T) {
 		chnk := &UserDataChunk{
 			Abandon:         true,
 			Final:           false,
-			FlowID:          io.Vlu(126),
+			FlowID:          vlu.Vlu(126),
 			FragmentControl: MiddleFragmentControl,
-			FsnOffset:       io.Vlu(12),
+			FsnOffset:       vlu.Vlu(12),
 			Options:         opts[:],
 			OptionsPresent:  true,
-			SequenceNumber:  io.Vlu(1256),
+			SequenceNumber:  vlu.Vlu(1256),
 			UserData:        t[:],
 		}
 

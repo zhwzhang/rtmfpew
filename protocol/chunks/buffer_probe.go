@@ -19,14 +19,14 @@ package chunks
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/rtmfpew/rtmfpew/protocol/io"
+	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 )
 
 const BufferProbeChunkType = 0x18
 
 // BufferProbeChunk is sent to request available receive buffer for a flow.
 type BufferProbeChunk struct {
-	FlowID io.Vlu
+	FlowID vlu.Vlu
 }
 
 func (chnk *BufferProbeChunk) Type() byte {

@@ -20,16 +20,16 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"github.com/rtmfpew/rtmfpew/protocol/io"
+	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 )
 
 const DataAcknowledgementBitmapChunkType = 0x50
 
 // DataAcknowledgementBitmapChunk is sent to indicate UserData fragment sequense numbers beeing recieved.
 type DataAcknowledgementBitmapChunk struct {
-	FlowID                io.Vlu
-	BufferBlocksAvailable io.Vlu
-	CumulativeAck         io.Vlu
+	FlowID                vlu.Vlu
+	BufferBlocksAvailable vlu.Vlu
+	CumulativeAck         vlu.Vlu
 
 	Acknowledgement []byte
 }

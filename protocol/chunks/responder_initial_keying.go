@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"github.com/rtmfpew/rtmfpew/protocol/io"
+	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 )
 
 const ResponderInitialKeyingChunkType = 0x78
@@ -28,7 +28,7 @@ const ResponderInitialKeyingChunkType = 0x78
 // ResponderInitialKeyingChunk is sent as response on InitiatorInitialKeying in startup mode
 type ResponderInitialKeyingChunk struct {
 	ResponderSessionID uint32
-	// responderComponentLength io.Vlu
+	// responderComponentLength vlu.Vlu
 	SessionKeyResponderComponent []byte
 
 	Signature []byte
@@ -40,7 +40,7 @@ func (chnk *ResponderInitialKeyingChunk) Type() byte {
 }
 
 func (chnk *ResponderInitialKeyingChunk) Len() uint16 {
-	sessionKeyVlu := io.Vlu(len(chnk.SessionKeyResponderComponent))
+	sessionKeyVlu := vlu.Vlu(len(chnk.SessionKeyResponderComponent))
 
 	return uint16(1 +
 		4 + // ID
@@ -66,7 +66,7 @@ func (chnk *ResponderInitialKeyingChunk) WriteTo(buffer *bytes.Buffer) error {
 		return err
 	}
 
-	if err = io.WriteVluBytesTo(buffer, chnk.SessionKeyResponderComponent); err != nil {
+	if err = vlu.WriteVluBytesTo(buffer, chnk.SessionKeyResponderComponent); err != nil {
 		return err
 	}
 
@@ -92,7 +92,7 @@ func (chnk *ResponderInitialKeyingChunk) ReadFrom(buffer *bytes.Buffer) error {
 	}
 
 	sessionKeyResponderComponentLength := byte(0)
-	if sessionKeyResponderComponentLength, chnk.SessionKeyResponderComponent, err = io.ReadVluBytesFrom(buffer); err != nil {
+	if sessionKeyResponderComponentLength, chnk.SessionKeyResponderComponent, err = vlu.ReadVluBytesFrom(buffer); err != nil {
 		return err
 	}
 

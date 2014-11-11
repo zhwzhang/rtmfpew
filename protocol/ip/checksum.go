@@ -14,27 +14,45 @@
 // limitations under the License.
 //
 
-package io
+package ip
 
 import (
-	// "bytes"
-	. "github.com/smartystreets/goconvey/convey"
-	"testing"
+	"bytes"
+	"encoding/binary"
 )
 
-func TestChecksum(t *testing.T) {
-
-	data := []byte{
-		0x45, 0x00, 0x00, 0x47,
-		0x73, 0x88, 0x40, 0x00,
-		0x40, 0x06, 0xA2, 0xC4,
-		0x83, 0x9F, 0x0E, 0x85,
-		0x83, 0x9F, 0x0E, 0xA1,
+// Checksum calculates IPv4 Header checksum from rfc1071
+func Checksum(b []byte) uint16 {
+	a := uint16(0)
+	buff := bytes.NewBuffer(b)
+	err := binary.Read(buff, binary.BigEndian, &a)
+	if err != nil {
+		return 0
 	}
 
-	Convey("Given a test data chunk", t, func() {
-		Convey("Checksum should be calculated properly", func() {
-			So(Checksum(data), ShouldEqual, 0x0000)
-		})
-	})
+	acc := uint32(0)
+
+	for i := 0; i < len(b)/2; i++ {
+		err := binary.Read(buff, binary.BigEndian, &a)
+		if err != nil {
+			return 0
+		}
+
+		acc += uint32(a)
+	}
+
+	if len(b)%2 > 0 {
+		t, err := buff.ReadByte()
+		if err != nil {
+			return 0
+		}
+
+		acc += uint32(t)
+	}
+
+	for acc>>16 != 0 {
+		acc = (acc & 0xffff) + (acc >> 16)
+	}
+
+	return ^uint16(acc)
 }

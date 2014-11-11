@@ -18,7 +18,7 @@ package chunks
 
 import (
 	"bytes"
-	"github.com/rtmfpew/rtmfpew/protocol/io"
+	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
@@ -26,8 +26,8 @@ import (
 func TestFlowExceptionReportIO(t *testing.T) {
 	Convey("Given a flow exception report chunk", t, func() {
 		chnk := &FlowExceptionReportChunk{
-			FlowID:    io.Vlu(182),
-			Exception: io.Vlu(161),
+			FlowID:    vlu.Vlu(182),
+			Exception: vlu.Vlu(161),
 		}
 
 		buff := bytes.NewBuffer(make([]byte, 0))

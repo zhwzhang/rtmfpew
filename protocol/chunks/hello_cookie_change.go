@@ -20,14 +20,14 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"github.com/rtmfpew/rtmfpew/protocol/io"
+	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 )
 
 const HelloCookieChangeChunkType = 0x79
 
 // HelloCookieChangeChunk is sent to change cookie of InitiatorInitialKeying in startup mod
 type HelloCookieChangeChunk struct {
-	// OldCookieLen io.Vlu
+	// OldCookieLen vlu.Vlu
 	OldCookie []byte
 	NewCookie []byte
 }
@@ -38,7 +38,7 @@ func (chnk *HelloCookieChangeChunk) Type() byte {
 }
 
 func (chnk *HelloCookieChangeChunk) Len() uint16 {
-	OldCookieVlu := io.Vlu(len(chnk.OldCookie))
+	OldCookieVlu := vlu.Vlu(len(chnk.OldCookie))
 
 	return uint16(1 +
 		(&OldCookieVlu).ByteLength() +
@@ -57,7 +57,7 @@ func (chnk *HelloCookieChangeChunk) WriteTo(buffer *bytes.Buffer) error {
 		return err
 	}
 
-	if err = io.WriteVluBytesTo(buffer, chnk.OldCookie); err != nil {
+	if err = vlu.WriteVluBytesTo(buffer, chnk.OldCookie); err != nil {
 		return err
 	}
 
@@ -79,7 +79,7 @@ func (chnk *HelloCookieChangeChunk) ReadFrom(buffer *bytes.Buffer) error {
 
 	// Contents
 	oldCookieLength := byte(0)
-	oldCookieLength, chnk.OldCookie, err = io.ReadVluBytesFrom(buffer)
+	oldCookieLength, chnk.OldCookie, err = vlu.ReadVluBytesFrom(buffer)
 	if err != nil {
 		return err
 	}

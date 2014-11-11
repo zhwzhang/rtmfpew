@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/sha256"
 	"errors"
 )
 
@@ -27,8 +28,10 @@ import (
 type Profile interface {
 	Init(key []byte) error
 	InitDefault() error
-	Encrypt(data bytes.Buffer) error
-	Decrypt(data bytes.Buffer) error
+	EncryptAt(data *bytes.Buffer, offset int) error
+	DecryptAt(data *bytes.Buffer, offset int) error
+	Checksum(b []byte) []byte
+	ChecksumLen() int
 }
 
 // DefaultProfile for rmtmfp encryption
@@ -43,6 +46,12 @@ var DefaultKey = [...]byte{ // Adobe Systems 02
 	0x65, 0x20, 0x53, 0x79,
 	0x73, 0x74, 0x65, 0x6D,
 	0x73, 0x20, 0x30, 0x32,
+}
+
+// Checksum calculates SHA256 checksum
+func (profile *DefaultProfile) Checksum(b []byte) []byte {
+	sum := sha256.Sum256(b)
+	return sum[:]
 }
 
 // Init crypto profile with specific encryption key
@@ -69,14 +78,18 @@ func (profile *DefaultProfile) InitDefault() error {
 	return profile.Init(DefaultKey[:16])
 }
 
-// Encrypt encrupts buffer with specified block cipher
-func (profile *DefaultProfile) Encrypt(data bytes.Buffer) error {
-	if profile.blockCipher != nil {
-		encryptedBuf := make([]byte, len(data.Bytes()))
+// ChecksumLen returns
+func (profile *DefaultProfile) ChecksumLen() int {
+	return 256
+}
 
-		profile.blockCipher.Encrypt(encryptedBuf, data.Bytes())
-		data.Reset()
-		data.Write(encryptedBuf)
+// EncryptAt encrupts buffer with specified block cipher
+func (profile *DefaultProfile) EncryptAt(data *bytes.Buffer, offset int) error {
+	if profile.blockCipher != nil {
+		encryptedBuf := make([]byte, len(data.Bytes())+offset)
+
+		profile.blockCipher.Encrypt(encryptedBuf[offset:], data.Bytes()[offset:])
+		copy(data.Bytes()[offset:], encryptedBuf[offset:])
 
 		return nil
 	}
@@ -84,14 +97,13 @@ func (profile *DefaultProfile) Encrypt(data bytes.Buffer) error {
 	return errors.New("Init crypto profile first")
 }
 
-// Decrypt decrypts buffer with specified block cipher
-func (profile *DefaultProfile) Decrypt(data bytes.Buffer) error {
+// DecryptAt decrypts buffer with specified block cipher starting at offset
+func (profile *DefaultProfile) DecryptAt(data *bytes.Buffer, offset int) error {
 	if profile.blockCipher != nil {
-		decryptedBuf := make([]byte, len(data.Bytes()))
+		decryptedBuff := make([]byte, len(data.Bytes())+offset)
 
-		profile.blockCipher.Decrypt(decryptedBuf, data.Bytes())
-		data.Reset()
-		data.Write(decryptedBuf)
+		profile.blockCipher.Decrypt(decryptedBuff, data.Bytes()[offset:])
+		copy(data.Bytes()[offset:], decryptedBuff[offset:])
 
 		return nil
 	}

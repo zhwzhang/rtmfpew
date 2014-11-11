@@ -14,7 +14,8 @@
 // limitations under the License.
 //
 
-package io
+// Package vlu is variable length unit implementation with some basic bit operations
+package vlu
 
 import (
 	"bytes"
@@ -25,10 +26,12 @@ import (
 // Vlu uint32 wrapper
 type Vlu uint32
 
+// BitIsSet checks whether bit is set in specified position
 func BitIsSet(value *byte, pos byte) bool {
 	return (*value & (1 << (pos))) != 0
 }
 
+// SetBit sets bit in specified position
 func SetBit(value *byte, pos byte) {
 	*value = *value | (1 << (pos))
 }
@@ -59,6 +62,7 @@ func (vlu *Vlu) ByteLength() int {
 	return 0
 }
 
+// ReadFrom reads Vlu value from bytes.Buffer
 func (vlu *Vlu) ReadFrom(buffer *bytes.Buffer) error {
 
 	value := uint32(0)
@@ -83,7 +87,7 @@ func (vlu *Vlu) ReadFrom(buffer *bytes.Buffer) error {
 	return nil
 }
 
-// ReadVluBytesFrom reads []byte array and returns it's Vlu size
+// ReadVluBytesFrom reads []byte array and returns it's prefixed Vlu size
 func ReadVluBytesFrom(buffer *bytes.Buffer) (byte, []byte, error) {
 
 	vlu := Vlu(0)
@@ -105,8 +109,9 @@ func ReadVluBytesFrom(buffer *bytes.Buffer) (byte, []byte, error) {
 	return byte(vlu.ByteLength()), data, nil
 }
 
+// WriteTo writes vlu value to bytes.Buffer
 func (vlu *Vlu) WriteTo(buffer *bytes.Buffer) error {
-	if uint32(*vlu) > uint32(math.Pow(2, 28) - 1) {
+	if uint32(*vlu) > uint32(math.Pow(2, 28)-1) {
 		return errors.New("Wrong VLU value")
 	}
 
@@ -130,6 +135,7 @@ func (vlu *Vlu) WriteTo(buffer *bytes.Buffer) error {
 	return nil
 }
 
+// WriteVluBytesTo writes []byte array into bytes.Buffer with an Vlu prefix
 func WriteVluBytesTo(buffer *bytes.Buffer, data []byte) error {
 	vlu := Vlu(len(data))
 	err := vlu.WriteTo(buffer)

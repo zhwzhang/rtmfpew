@@ -19,15 +19,15 @@ package chunks
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/rtmfpew/rtmfpew/protocol/io"
+	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 )
 
 const FlowExceptionReportChunkType = 0x5e
 
 // FlowExceptionReportChunk is sent to close the flow.
 type FlowExceptionReportChunk struct {
-	FlowID    io.Vlu
-	Exception io.Vlu
+	FlowID    vlu.Vlu
+	Exception vlu.Vlu
 }
 
 // Type returns FlowExceptionReportChunk type opcode

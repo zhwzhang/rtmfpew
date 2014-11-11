@@ -19,7 +19,7 @@ package chunks
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/rtmfpew/rtmfpew/protocol/io"
+	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 )
 
 const ResponderHelloChunkType = 0x70
@@ -37,8 +37,8 @@ func (chnk *ResponderHelloChunk) Type() byte {
 }
 
 func (chnk *ResponderHelloChunk) Len() uint16 {
-	tagEchoVlu := io.Vlu(len(chnk.tagEcho))
-	cookieVlu := io.Vlu(len(chnk.cookie))
+	tagEchoVlu := vlu.Vlu(len(chnk.tagEcho))
+	cookieVlu := vlu.Vlu(len(chnk.cookie))
 	
 	return uint16(1 +
 		tagEchoVlu.ByteLength() +
@@ -61,11 +61,11 @@ func (chnk *ResponderHelloChunk) WriteTo(buffer *bytes.Buffer) error {
 	}
 
 	// Contents
-	if err = io.WriteVluBytesTo(buffer, chnk.tagEcho); err != nil {
+	if err = vlu.WriteVluBytesTo(buffer, chnk.tagEcho); err != nil {
 		return err
 	}
 
-	if err = io.WriteVluBytesTo(buffer, chnk.cookie); err != nil {
+	if err = vlu.WriteVluBytesTo(buffer, chnk.cookie); err != nil {
 		return err
 	}
 
@@ -86,12 +86,12 @@ func (chnk *ResponderHelloChunk) ReadFrom(buffer *bytes.Buffer) error {
 	}
 	// Contents
 	tagLength := byte(0)
-	if tagLength, chnk.tagEcho, err = io.ReadVluBytesFrom(buffer); err != nil {
+	if tagLength, chnk.tagEcho, err = vlu.ReadVluBytesFrom(buffer); err != nil {
 		return err
 	}
 
 	cookieLength := byte(0)
-	if cookieLength, chnk.cookie, err = io.ReadVluBytesFrom(buffer); err != nil {
+	if cookieLength, chnk.cookie, err = vlu.ReadVluBytesFrom(buffer); err != nil {
 		return err
 	}
 

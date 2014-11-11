@@ -19,7 +19,7 @@ package chunks
 import (
 	"bytes"
 	"errors"
-	"github.com/rtmfpew/rtmfpew/protocol/io"
+	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 )
 
 // Default UserDataOption types
@@ -30,17 +30,17 @@ const (
 
 // UserDataOption is a container of option values.
 type UserDataOption struct {
-	OptionType io.Vlu
+	OptionType vlu.Vlu
 	Value      []byte
 }
 
 func (opt *UserDataOption) Length() int {
-	l := io.Vlu(opt.OptionType.ByteLength() + len(opt.Value))
+	l := vlu.Vlu(opt.OptionType.ByteLength() + len(opt.Value))
 	return l.ByteLength() + int(l)
 }
 
 func (opt *UserDataOption) WriteTo(buffer *bytes.Buffer) error {
-	length := io.Vlu(opt.OptionType.ByteLength() + len(opt.Value))
+	length := vlu.Vlu(opt.OptionType.ByteLength() + len(opt.Value))
 	err := length.WriteTo(buffer)
 	if err != nil {
 		return err
@@ -57,9 +57,9 @@ func (opt *UserDataOption) WriteTo(buffer *bytes.Buffer) error {
 	return nil
 }
 
-func (opt *UserDataOption) ReadFrom(buffer *bytes.Buffer) (io.Vlu, error) {
+func (opt *UserDataOption) ReadFrom(buffer *bytes.Buffer) (vlu.Vlu, error) {
 
-	length := io.Vlu(0)
+	length := vlu.Vlu(0)
 	err := length.ReadFrom(buffer)
 	if err != nil {
 		return 0, err

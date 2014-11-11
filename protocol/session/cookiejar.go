@@ -14,8 +14,4 @@
 // limitations under the License.
 //
 
-package protocol
-
-type Flow struct {
-	id string
-}
+package session

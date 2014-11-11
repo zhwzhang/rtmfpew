@@ -18,7 +18,7 @@ package chunks
 
 import (
 	"bytes"
-	"github.com/rtmfpew/rtmfpew/protocol/io"
+	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
@@ -26,7 +26,7 @@ import (
 func TestBufferProbeChunkIO(t *testing.T) {
 	Convey("Given a buffer probe chunk", t, func() {
 		chnk := &BufferProbeChunk{
-			FlowID: io.Vlu(16),
+			FlowID: vlu.Vlu(16),
 		}
 
 		buff := bytes.NewBuffer(make([]byte, 0))

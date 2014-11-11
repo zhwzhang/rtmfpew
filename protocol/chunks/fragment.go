@@ -19,7 +19,7 @@ package chunks
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/rtmfpew/rtmfpew/protocol/io"
+	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 )
 
 const FragmentChunkType = 0x7f
@@ -27,8 +27,8 @@ const FragmentChunkType = 0x7f
 // FragmentChunk is used to fragment packets in startup mode.
 type FragmentChunk struct {
 	MoreFragments bool
-	PacketID      io.Vlu
-	FragmentNum   io.Vlu
+	PacketID      vlu.Vlu
+	FragmentNum   vlu.Vlu
 
 	Fragment []byte
 }

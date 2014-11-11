@@ -18,7 +18,7 @@ package chunks
 
 import (
 	"bytes"
-	"github.com/rtmfpew/rtmfpew/protocol/io"
+	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
@@ -27,7 +27,7 @@ func TestUserDataOptionIO(t *testing.T) {
 	Convey("Given a user data option chunk", t, func() {
 		t := [...]byte{0x2A, 0xC3, 0xB1, 0x5C, 0xED, 0xA2, 0x18, 0xA1, 0xB2}
 		chnk := &UserDataOption{
-			OptionType: io.Vlu(912),
+			OptionType: vlu.Vlu(912),
 			Value:      t[:],
 		}
 

@@ -18,7 +18,7 @@ package chunks
 
 import (
 	"bytes"
-	"github.com/rtmfpew/rtmfpew/protocol/io"
+	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )
@@ -31,9 +31,9 @@ func TestDataAckBitmapIO(t *testing.T) {
 		}
 
 		chnk := &DataAcknowledgementBitmapChunk{
-			FlowID:                io.Vlu(19872),
-			BufferBlocksAvailable: io.Vlu(1141),
-			CumulativeAck:         io.Vlu(391),
+			FlowID:                vlu.Vlu(19872),
+			BufferBlocksAvailable: vlu.Vlu(1141),
+			CumulativeAck:         vlu.Vlu(391),
 			Acknowledgement:       sl[:],
 		}
 

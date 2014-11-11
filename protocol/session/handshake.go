@@ -14,4 +14,7 @@
 // limitations under the License.
 //
 
-package net
+package session
+
+type Handshake struct {
+}

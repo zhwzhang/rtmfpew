@@ -21,7 +21,7 @@ import (
 	"container/list"
 	"encoding/binary"
 	"errors"
-	"github.com/rtmfpew/rtmfpew/protocol/io"
+	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 )
 
 const UserDataChunkType = 0x10
@@ -41,9 +41,9 @@ type UserDataChunk struct {
 	FragmentControl byte
 	Abandon         bool
 	Final           bool
-	FlowID          io.Vlu
-	SequenceNumber  io.Vlu
-	FsnOffset       io.Vlu
+	FlowID          vlu.Vlu
+	SequenceNumber  vlu.Vlu
+	FsnOffset       vlu.Vlu
 
 	Options  []UserDataOption
 	UserData []byte
@@ -133,7 +133,7 @@ func (chnk *UserDataChunk) WriteNextTo(buffer *bytes.Buffer, typ byte) error {
 		}
 	}
 
-	marker := io.Vlu(0)
+	marker := vlu.Vlu(0)
 	if err = marker.WriteTo(buffer); err != nil {
 		return err
 	}
@@ -189,7 +189,7 @@ func (chnk *UserDataChunk) ReadFrom(buffer *bytes.Buffer) error {
 	if chnk.OptionsPresent {
 		optList := list.New()
 
-		optLen := io.Vlu(1)
+		optLen := vlu.Vlu(1)
 		for dataLength > 0 {
 			opt := UserDataOption{}
 			optLen, _ = opt.ReadFrom(buffer)

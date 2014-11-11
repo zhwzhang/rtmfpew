@@ -20,8 +20,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"github.com/rtmfpew/rtmfpew/protocol/io"
 	"github.com/rtmfpew/rtmfpew/protocol/net"
+	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 )
 
 const ForwardedHelloChunkType = 0x0f
@@ -39,7 +39,7 @@ func (chnk *ForwardedHelloChunk) Type() byte {
 }
 
 func (chnk *ForwardedHelloChunk) Len() uint16 {
-	v := io.Vlu(len(chnk.Epd))
+	v := vlu.Vlu(len(chnk.Epd))
 	return uint16(1 + (&v).ByteLength() +
 		len(chnk.Epd) +
 		chnk.ReplyAddress.Length() +
@@ -59,7 +59,7 @@ func (chnk *ForwardedHelloChunk) WriteTo(buffer *bytes.Buffer) error {
 	}
 
 	// Contents
-	if err = io.WriteVluBytesTo(buffer, chnk.Epd); err != nil {
+	if err = vlu.WriteVluBytesTo(buffer, chnk.Epd); err != nil {
 		return err
 	}
 
@@ -85,7 +85,7 @@ func (chnk *ForwardedHelloChunk) ReadFrom(buffer *bytes.Buffer) error {
 
 	// Contents
 	epdLength := byte(0)
-	if epdLength, chnk.Epd, err = io.ReadVluBytesFrom(buffer); err != nil {
+	if epdLength, chnk.Epd, err = vlu.ReadVluBytesFrom(buffer); err != nil {
 		return err
 	}
 

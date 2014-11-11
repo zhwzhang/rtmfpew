@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"github.com/rtmfpew/rtmfpew/protocol/io"
+	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 	"net"
 )
 
@@ -48,11 +48,11 @@ func (addr *PeerAddress) Length() int {
 
 func PeerAddressFrom(udpAddr *net.UDPAddr) *PeerAddress {
 	addr := &PeerAddress{
-		IP: []byte(udpAddr.IP),
+		IP:     []byte(udpAddr.IP),
 		Origin: LocalOrigin,
-		Port: uint16(udpAddr.Port),
+		Port:   uint16(udpAddr.Port),
 	}
-	
+
 	return addr
 }
 
@@ -65,7 +65,7 @@ func (addr *PeerAddress) ReadFrom(buffer *bytes.Buffer) (err error) {
 
 	addr.Origin = flags & 3 // first two bits, 5 reserved
 
-	if io.BitIsSet(&flags, 7) { // is IPv6
+	if vlu.BitIsSet(&flags, 7) { // is IPv6
 		addr.IP = make([]byte, net.IPv6len)
 	} else {
 		addr.IP = make([]byte, net.IPv4len)

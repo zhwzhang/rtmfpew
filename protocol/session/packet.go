@@ -14,13 +14,13 @@
 // limitations under the License.
 //
 
-package protocol
+package session
 
 import (
 	"bytes"
 	"container/list"
 	"encoding/binary"
-	"github.com/rtmfpew/rtmfpew/protocol/io"
+	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 )
 
 const (
@@ -68,19 +68,19 @@ func (pckt *Packet) writeTo(buffer *bytes.Buffer) error {
 	flags := byte(0)
 
 	if pckt.TimeCritical {
-		io.SetBit(&flags, 7)
+		vlu.SetBit(&flags, 7)
 	}
 
 	if pckt.TimeCriticalReserve {
-		io.SetBit(&flags, 6)
+		vlu.SetBit(&flags, 6)
 	}
 
 	if pckt.TimestampPresent {
-		io.SetBit(&flags, 3)
+		vlu.SetBit(&flags, 3)
 	}
 
 	if pckt.TimestampEchoPresent {
-		io.SetBit(&flags, 2)
+		vlu.SetBit(&flags, 2)
 	}
 
 	flags = flags | pckt.Mode
@@ -106,11 +106,11 @@ func (pckt *Packet) readFrom(buffer *bytes.Buffer) error {
 		return err
 	}
 
-	pckt.TimeCritical = io.BitIsSet(&flags, 7)
-	pckt.TimeCriticalReserve = io.BitIsSet(&flags, 6)
+	pckt.TimeCritical = vlu.BitIsSet(&flags, 7)
+	pckt.TimeCriticalReserve = vlu.BitIsSet(&flags, 6)
 
-	pckt.TimestampPresent = io.BitIsSet(&flags, 3)
-	pckt.TimestampEchoPresent = io.BitIsSet(&flags, 2)
+	pckt.TimestampPresent = vlu.BitIsSet(&flags, 3)
+	pckt.TimestampEchoPresent = vlu.BitIsSet(&flags, 2)
 
 	pckt.Mode = flags & 0x03
 
@@ -153,4 +153,8 @@ func (pckt *Packet) writePaddingTo(buffer *bytes.Buffer) error {
 	}
 
 	return binary.Write(buffer, binary.BigEndian, padding)
+}
+
+func (pckt *Packet) ProccessChunks() {
+
 }

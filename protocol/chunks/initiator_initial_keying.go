@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"github.com/rtmfpew/rtmfpew/protocol/io"
+	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 )
 
 const InitiatorInitialKeyingChunkType = 0x38
@@ -28,11 +28,11 @@ const InitiatorInitialKeyingChunkType = 0x38
 // InitiatorInitialKeyingChunk is sent as response on ResponderHelloChunk.
 type InitiatorInitialKeyingChunk struct {
 	InitiatorSessionID uint32
-	// cookieLength io.Vlu
+	// cookieLength vlu.Vlu
 	CookieEcho []byte
-	// certLength io.Vlu
+	// certLength vlu.Vlu
 	InitiatorCertificate []byte
-	// initiatorComponentLength io.Vlu
+	// initiatorComponentLength vlu.Vlu
 	SessionKeyInitiatorComponent []byte
 
 	Signature []byte
@@ -44,9 +44,9 @@ func (chnk *InitiatorInitialKeyingChunk) Type() byte {
 }
 
 func (chnk *InitiatorInitialKeyingChunk) Len() uint16 {
-	cookieEchoVlu := io.Vlu(len(chnk.CookieEcho))
-	initiatorCertVlu := io.Vlu(len(chnk.InitiatorCertificate))
-	sessionKeyCompVlu := io.Vlu(len(chnk.SessionKeyInitiatorComponent))
+	cookieEchoVlu := vlu.Vlu(len(chnk.CookieEcho))
+	initiatorCertVlu := vlu.Vlu(len(chnk.InitiatorCertificate))
+	sessionKeyCompVlu := vlu.Vlu(len(chnk.SessionKeyInitiatorComponent))
 
 	return uint16(1 +
 		4 + // SessionID
@@ -76,15 +76,15 @@ func (chnk *InitiatorInitialKeyingChunk) WriteTo(buffer *bytes.Buffer) error {
 		return err
 	}
 
-	if err = io.WriteVluBytesTo(buffer, chnk.CookieEcho); err != nil {
+	if err = vlu.WriteVluBytesTo(buffer, chnk.CookieEcho); err != nil {
 		return err
 	}
 
-	if err = io.WriteVluBytesTo(buffer, chnk.InitiatorCertificate); err != nil {
+	if err = vlu.WriteVluBytesTo(buffer, chnk.InitiatorCertificate); err != nil {
 		return err
 	}
 
-	if err = io.WriteVluBytesTo(buffer, chnk.SessionKeyInitiatorComponent); err != nil {
+	if err = vlu.WriteVluBytesTo(buffer, chnk.SessionKeyInitiatorComponent); err != nil {
 		return err
 	}
 
@@ -110,17 +110,17 @@ func (chnk *InitiatorInitialKeyingChunk) ReadFrom(buffer *bytes.Buffer) error {
 	}
 
 	cookieEchoLength := byte(0)
-	if cookieEchoLength, chnk.CookieEcho, err = io.ReadVluBytesFrom(buffer); err != nil {
+	if cookieEchoLength, chnk.CookieEcho, err = vlu.ReadVluBytesFrom(buffer); err != nil {
 		return err
 	}
 
 	initiatorCertificateLength := byte(0)
-	if initiatorCertificateLength, chnk.InitiatorCertificate, err = io.ReadVluBytesFrom(buffer); err != nil {
+	if initiatorCertificateLength, chnk.InitiatorCertificate, err = vlu.ReadVluBytesFrom(buffer); err != nil {
 		return err
 	}
 
 	sessionKeyInitiatorComponentLength := byte(0)
-	if sessionKeyInitiatorComponentLength, chnk.SessionKeyInitiatorComponent, err = io.ReadVluBytesFrom(buffer); err != nil {
+	if sessionKeyInitiatorComponentLength, chnk.SessionKeyInitiatorComponent, err = vlu.ReadVluBytesFrom(buffer); err != nil {
 		return err
 	}
 

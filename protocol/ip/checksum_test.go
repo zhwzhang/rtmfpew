@@ -14,4 +14,27 @@
 // limitations under the License.
 //
 
-package net
+package ip
+
+import (
+	// "bytes"
+	. "github.com/smartystreets/goconvey/convey"
+	"testing"
+)
+
+func TestChecksum(t *testing.T) {
+
+	data := []byte{
+		0x45, 0x00, 0x00, 0x47,
+		0x73, 0x88, 0x40, 0x00,
+		0x40, 0x06, 0xA2, 0xC4,
+		0x83, 0x9F, 0x0E, 0x85,
+		0x83, 0x9F, 0x0E, 0xA1,
+	}
+
+	Convey("Given a test data chunk", t, func() {
+		Convey("Checksum should be calculated properly", func() {
+			So(Checksum(data), ShouldEqual, 0x0000)
+		})
+	})
+}

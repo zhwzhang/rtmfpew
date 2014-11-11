@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"container/list"
 	"encoding/binary"
-	"github.com/rtmfpew/rtmfpew/protocol/io"
+	"github.com/rtmfpew/rtmfpew/protocol/vlu"
 	. "github.com/rtmfpew/rtmfpew/protocol/net"
 )
 
@@ -38,7 +38,7 @@ func (chnk *ResponderRedirectChunk) Type() byte {
 }
 
 func (chnk *ResponderRedirectChunk) Len() uint16 {
-	TagEchoVlu := io.Vlu(len(chnk.TagEcho))
+	TagEchoVlu := vlu.Vlu(len(chnk.TagEcho))
 	destinationsLength := 0
 	
 	for _, destination := range chnk.RedirectDestination {
@@ -64,7 +64,7 @@ func (chnk *ResponderRedirectChunk) WriteTo(buffer *bytes.Buffer) error {
 	}
 
 	// Contents
-	if err = io.WriteVluBytesTo(buffer, chnk.TagEcho); err != nil {
+	if err = vlu.WriteVluBytesTo(buffer, chnk.TagEcho); err != nil {
 		return err
 	}
 
@@ -87,7 +87,7 @@ func (chnk *ResponderRedirectChunk) ReadFrom(buffer *bytes.Buffer) error {
 
 	// Contents
 	tagLength := byte(0)
-	tagLength, chnk.TagEcho, err = io.ReadVluBytesFrom(buffer)
+	tagLength, chnk.TagEcho, err = vlu.ReadVluBytesFrom(buffer)
 	if err != nil {
 		return err
 	}
