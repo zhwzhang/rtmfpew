@@ -2,7 +2,7 @@
 
 ## RTMFPew
 RTMFP P2P transport implementation in Go.
-=========================================
+-----------------------------------------
 [![bountysource](https://www.bountysource.com/badge/team?team_id=47410)](https://www.bountysource.com/teams/rtmfpew)
 [![gratipay](https://img.shields.io/gratipay/VoidNugget.svg)](https://gratipay.com/VoidNugget)
 
