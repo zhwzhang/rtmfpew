@@ -1,14 +1,14 @@
 [![baby-gopher](http://www.babygopher.org/images/babygopher-badge.png)](http://www.babygopher.org)
 
 ## RTMFPew
-RTMFP P2P transport implementation in Go.
+#### RTMFP P2P transport implementation in Go
 -----------------------------------------
 [![bountysource](https://www.bountysource.com/badge/team?team_id=47410)](https://www.bountysource.com/teams/rtmfpew)
 [![gratipay](https://img.shields.io/gratipay/VoidNugget.svg)](https://gratipay.com/VoidNugget)
 
 ### Status
 
-#### It's NOT working yet
+##### It's NOT working yet
 
 #### What's TBD
  - [x] Data chunks processing & tests
