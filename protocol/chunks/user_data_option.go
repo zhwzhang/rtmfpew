@@ -19,7 +19,7 @@ package chunks
 import (
 	"bytes"
 	"errors"
-	"github.com/rtmfpew/rtmfpew/protocol/vlu"
+	"github.com/rtmfpew/amfy/vlu"
 )
 
 // Default UserDataOption types

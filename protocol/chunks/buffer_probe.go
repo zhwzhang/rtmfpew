@@ -19,7 +19,7 @@ package chunks
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/rtmfpew/rtmfpew/protocol/vlu"
+	"github.com/rtmfpew/amfy/vlu"
 )
 
 const BufferProbeChunkType = 0x18

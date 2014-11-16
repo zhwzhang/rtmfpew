@@ -27,7 +27,7 @@ import (
 	"github.com/rtmfpew/rtmfpew/protocol/connection"
 	"github.com/rtmfpew/rtmfpew/protocol/crypto"
 	"github.com/rtmfpew/rtmfpew/protocol/ip"
-	"github.com/rtmfpew/rtmfpew/protocol/vlu"
+	"github.com/rtmfpew/amfy/vlu"
 	"sync/atomic"
 )
 

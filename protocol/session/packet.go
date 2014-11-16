@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"container/list"
 	"encoding/binary"
-	"github.com/rtmfpew/rtmfpew/protocol/vlu"
+	"github.com/rtmfpew/amfy/vlu"
 )
 
 const (

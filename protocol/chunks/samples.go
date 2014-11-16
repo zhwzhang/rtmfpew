@@ -18,7 +18,7 @@ package chunks
 
 import (
 	"github.com/rtmfpew/rtmfpew/protocol/connection"
-	"github.com/rtmfpew/rtmfpew/protocol/vlu"
+	"github.com/rtmfpew/amfy/vlu"
 	"net"
 )
 

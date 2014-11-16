@@ -21,7 +21,7 @@ import (
 	"container/list"
 	"encoding/binary"
 	"errors"
-	"github.com/rtmfpew/rtmfpew/protocol/vlu"
+	"github.com/rtmfpew/amfy/vlu"
 )
 
 const UserDataChunkType = 0x10

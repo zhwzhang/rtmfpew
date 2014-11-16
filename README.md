@@ -1,8 +1,8 @@
 [![baby-gopher](http://www.babygopher.org/images/babygopher-badge.png)](http://www.babygopher.org)
 
 ## RTMFPew
-#### RTMFP P2P transport implementation in Go
------------------------------------------
+##### RTMFP P2P transport implementation in Go
+-----------------------------------------------
 [![bountysource](https://www.bountysource.com/badge/team?team_id=47410)](https://www.bountysource.com/teams/rtmfpew)
 [![gratipay](https://img.shields.io/gratipay/VoidNugget.svg)](https://gratipay.com/VoidNugget)
 
@@ -13,6 +13,7 @@
 #### What's TBD
  - [x] Data chunks processing & tests
  - [x] Session handling
+ - [ ] Amf0 & Amf3 serialization with [Amfy](https://github.com/rtmfpew/amfy)
  - [ ] NetGroup & NetStream API
  - [ ] Data transmission tests
  - [ ] RFC7016 compliant tests
