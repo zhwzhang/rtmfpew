@@ -18,11 +18,12 @@ package rtmfp
 
 import (
 	"errors"
-	"github.com/rtmfpew/rtmfpew/protocol"
 	"log"
 	"net/url"
 	"os"
 	"strconv"
+
+	"github.com/rtmfpew/rtmfpew/protocol"
 )
 
 const DefaultPort = 1935

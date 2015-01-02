@@ -20,8 +20,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"github.com/rtmfpew/amfy/vlu"
 	"net"
+
+	"github.com/rtmfpew/amfy/vlu"
 )
 
 // Address origins

@@ -19,6 +19,7 @@ package chunks
 import (
 	"bytes"
 	"errors"
+
 	"github.com/rtmfpew/amfy/vlu"
 )
 
@@ -66,7 +67,7 @@ func (opt *UserDataOption) ReadFrom(buffer *bytes.Buffer) (vlu.Vlu, error) {
 	}
 
 	if int(length) == 0 { // It's a Marker
-		return 0, nil	
+		return 0, nil
 	}
 
 	if err = opt.OptionType.ReadFrom(buffer); err != nil {

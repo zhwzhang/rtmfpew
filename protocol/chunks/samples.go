@@ -17,9 +17,10 @@
 package chunks
 
 import (
-	"github.com/rtmfpew/rtmfpew/protocol/connection"
-	"github.com/rtmfpew/amfy/vlu"
 	"net"
+
+	"github.com/rtmfpew/amfy/vlu"
+	"github.com/rtmfpew/rtmfpew/protocol/connection"
 )
 
 // BufferProbeChunkSample returns buffer probe sample chunk
