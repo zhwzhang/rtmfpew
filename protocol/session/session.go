@@ -110,8 +110,7 @@ func (session *Session) readID(buff *bytes.Buffer) error {
 		return err
 	}
 
-	peeker := bufio.NewReader(buff)
-	b, err := peeker.Peek(2) // Unscramble session ID
+	b, err := bufio.NewReader(buff).Peek(2) // Unscramble session ID
 	session.ID = session.ID ^ uint32(b[0]) ^ uint32(b[1])
 
 	return nil
@@ -120,8 +119,7 @@ func (session *Session) readID(buff *bytes.Buffer) error {
 // writeID writes session ID
 func (session *Session) writeID(buff *bytes.Buffer) error {
 	buff = bytes.NewBuffer(buff.Bytes()) // resets internal state
-	peeker := bufio.NewReader(buff)
-	b, err := peeker.Peek(2)
+	b, err := bufio.NewReader(buff).Peek(2)
 	if err != nil {
 		return err
 	}
@@ -136,54 +134,43 @@ func (session *Session) writeID(buff *bytes.Buffer) error {
 }
 
 func (session *Session) fragmentChunks(chnks *list.List) *list.List {
-	fragmentSlice := make([]byte, session.mtu)
-	fragmentBuff := bytes.NewBuffer(fragmentSlice)
-
 	l := uint16(0)
 	for c := chnks.Front(); c != nil; c = c.Next() {
 		l += c.Value.(Chunk).Len()
 	}
-
-	if l > session.mtu {
-		fragmentsNum := uint16(l / session.mtu)
-		if l%session.mtu > 0 {
-			fragmentsNum++
-		}
-
-		fragments := make([]chunks.FragmentChunk, fragmentsNum)
-
-		for c := chnks.Front(); c != nil; c = c.Next() {
-			c.Value.(Chunk).WriteTo(fragmentBuff)
-		}
-
-		pcktID := atomic.AddUint32(&session.pcktCounter, 1)
-
-		for i := uint16(0); i < fragmentsNum; i++ {
-			fragment := &chunks.FragmentChunk{
-				MoreFragments: i == fragmentsNum-1,
-				PacketID:      vlu.Vlu(pcktID),
-				FragmentNum:   vlu.Vlu(i),
-			}
-
-			if i == fragmentsNum-1 {
-				fragment.Fragment = fragmentSlice[i*session.mtu:]
-				break
-			}
-
-			fragment.Fragment = fragmentSlice[i*session.mtu : (i+1)*session.mtu]
-			fragments[i] = *fragment
-		}
-
-		fragmentsList := list.New()
-
-		for _, fragment := range fragments {
-			fragmentsList.PushBack(fragment)
-		}
-
-		return fragmentsList
+	
+	if l <= session.mtu {
+		return chnks
 	}
 
-	return nil
+	fragmentSlice := make([]byte, session.mtu)
+	fragmentBuff := bytes.NewBuffer(fragmentSlice)
+	fragmentsNum := uint16(l / session.mtu)
+	if l%session.mtu > 0 {
+		fragmentsNum++
+	}
+	for c := chnks.Front(); c != nil; c = c.Next() {
+		c.Value.(Chunk).WriteTo(fragmentBuff)
+	}
+
+	pcktID := atomic.AddUint32(&session.pcktCounter, 1)
+	fragmentsList := list.New()
+	for i := uint16(0); i < fragmentsNum; i++ {
+		fragment := &chunks.FragmentChunk{
+			MoreFragments: i == fragmentsNum-1,
+			PacketID:      vlu.Vlu(pcktID),
+			FragmentNum:   vlu.Vlu(i),
+		}
+
+		if i == fragmentsNum-1 {
+			fragment.Fragment = fragmentSlice[i*session.mtu:]
+		} else {
+			fragment.Fragment = fragmentSlice[i*session.mtu : (i+1)*session.mtu]
+		}
+		fragmentsList.PushBack(fragment)
+	}
+	return fragmentsList
+
 }
 
 var defragmentBuff = bytes.NewBuffer(make([]byte, packetMtu))

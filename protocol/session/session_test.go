@@ -17,21 +17,40 @@
 package session
 
 import (
+	"container/list"
 	"testing"
+
+	"github.com/rtmfpew/rtmfpew/protocol/chunks"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestSessionChunksFragmentation(t *testing.T) {
 	Convey("Given a set of chunks", t, func() {
-		// chunks := []Chunk{}
+		chnks := list.New()
+		for i := 0; i < 3; i++ {
+			chnks.PushBack(chunks.InitiatorHelloChunkSample()) // len is 12
+		}
+		fitMTU := (&Session{mtu: 100}).fragmentChunks(chnks)
+		sess := &Session{mtu: 20}
+		largerThanMTU := sess.fragmentChunks(chnks)
 
 		Convey("They should be fragmented properly", func() {
-
+			So(largerThanMTU.Len(), ShouldEqual, 2)
+			So(fitMTU, ShouldResemble, chnks)
 		})
 
-		Convey("Fragements should be sorted", func() {
+		Convey("Fragments should be sorted", func() {
+			i := uint32(0)
+			for chnk := largerThanMTU.Front(); chnk != nil; chnk = chnk.Next() {
+				packetID := uint32(chnk.Value.(*chunks.FragmentChunk).PacketID)
+				frgNum := uint32(chnk.Value.(*chunks.FragmentChunk).FragmentNum)
 
+				So(packetID, ShouldEqual, sess.pcktCounter)
+				So(frgNum, ShouldEqual, i)
+
+				i++
+			}
 		})
 
 		Convey("And defragmented back", func() {
