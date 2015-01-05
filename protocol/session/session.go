@@ -138,12 +138,12 @@ func (session *Session) fragmentChunks(chnks *list.List) *list.List {
 	for c := chnks.Front(); c != nil; c = c.Next() {
 		l += c.Value.(Chunk).Len()
 	}
-	
+
 	if l <= session.mtu {
 		return chnks
 	}
 
-	fragmentSlice := make([]byte, session.mtu)
+	fragmentSlice := make([]byte, l)
 	fragmentBuff := bytes.NewBuffer(fragmentSlice)
 	fragmentsNum := uint16(l / session.mtu)
 	if l%session.mtu > 0 {
@@ -170,19 +170,19 @@ func (session *Session) fragmentChunks(chnks *list.List) *list.List {
 		fragmentsList.PushBack(fragment)
 	}
 	return fragmentsList
-
 }
 
-var defragmentBuff = bytes.NewBuffer(make([]byte, packetMtu))
-
+// Performs defragmentation of FragmentChunk chunks.
 func (session *Session) defragmentChunks(chnks *list.List) (*list.List, error) {
+
+	var defragmentBuff = bytes.NewBuffer(make([]byte, packetMtu))
 	defragmentBuff.Reset()
 
 	pckt := &Packet{}
 	pckt.writeTo(defragmentBuff)
 
 	for chunk := chnks.Front(); chunk != nil; chunk.Next() {
-		_, err := defragmentBuff.Write(chunk.Value.(chunks.FragmentChunk).Fragment)
+		_, err := defragmentBuff.Write(chunk.Value.(*chunks.FragmentChunk).Fragment)
 
 		if err != nil {
 			return nil, err
@@ -240,6 +240,70 @@ func (session *Session) WritePacket(pckt Packet, buff *bytes.Buffer) error {
 	err = session.writeID(buff)
 
 	return err
+}
+
+func (session *Session) parseBytesToChunks(buff *bytes.Buffer) (chnks *list.List, err error) {
+	chnks = list.New()
+	var c Chunk
+loop:
+	for chunkType := byte(0); ; {
+		if chunkType, err = buff.ReadByte(); err != nil {
+			return
+		}
+
+		switch chunkType {
+		case chunks.BufferProbeChunkType:
+			c = &chunks.BufferProbeChunk{}
+		case chunks.DataAcknowledgementBitmapChunkType:
+			c = &chunks.DataAcknowledgementBitmapChunk{}
+		case chunks.DataAcknowledgementRangesChunkType:
+			c = &chunks.DataAcknowledgementRangesChunk{}
+		case chunks.FlowExceptionReportChunkType:
+			c = &chunks.FlowExceptionReportChunk{}
+		case chunks.ForwardedHelloChunkType:
+			c = &chunks.ForwardedHelloChunk{}
+		case chunks.InitiatorHelloChunkType:
+			c = &chunks.InitiatorHelloChunk{}
+		case chunks.InitiatorInitialKeyingChunkType:
+			c = &chunks.InitiatorInitialKeyingChunk{}
+		case chunks.NextUserDataChunkType:
+			c = &chunks.NextUserDataChunk{}
+		case chunks.PingReplyChunkType:
+			c = &chunks.PingReplyChunk{}
+		case chunks.PingChunkType:
+			c = &chunks.PingChunk{}
+		case chunks.ResponderHelloChunkType:
+			c = &chunks.ResponderHelloChunk{}
+		case chunks.ResponderInitialKeyingChunkType:
+			c = &chunks.ResponderInitialKeyingChunk{}
+		case chunks.ResponderRedirectChunkType:
+			c = &chunks.ResponderRedirectChunk{}
+		case chunks.SessionCloseAcknowledgementType:
+			c = &chunks.SessionCloseAcknowledgement{}
+		case chunks.SessionCloseRequestChunkType:
+			c = &chunks.SessionCloseRequestChunk{}
+		case chunks.UserDataChunkType:
+			c = &chunks.UserDataChunk{}
+		case chunks.FragmentChunkType:
+			c = &chunks.FragmentChunk{}
+			if err = c.ReadFrom(buff); err != nil {
+				return
+			}
+			if session.fragments[c.PacketID] == nil {
+				session.fragments[c.PacketID] = list.New()
+			}
+
+			//todo: more operations
+			continue
+		default:
+			break loop
+		}
+		if err = c.ReadFrom(buff); err != nil {
+			return
+		}
+		chnks.PushBack(c)
+	}
+	return
 }
 
 // ReadPacket reads packet from the byte buffer

@@ -31,13 +31,14 @@ func TestSessionChunksFragmentation(t *testing.T) {
 		for i := 0; i < 3; i++ {
 			chnks.PushBack(chunks.InitiatorHelloChunkSample()) // len is 12
 		}
-		fitMTU := (&Session{mtu: 100}).fragmentChunks(chnks)
 		sess := &Session{mtu: 20}
 		largerThanMTU := sess.fragmentChunks(chnks)
 
 		Convey("They should be fragmented properly", func() {
-			So(largerThanMTU.Len(), ShouldEqual, 2)
+			fitMTU := (&Session{mtu: 100}).fragmentChunks(chnks)
+
 			So(fitMTU, ShouldResemble, chnks)
+			So(largerThanMTU.Len(), ShouldEqual, 2)
 		})
 
 		Convey("Fragments should be sorted", func() {
@@ -54,7 +55,9 @@ func TestSessionChunksFragmentation(t *testing.T) {
 		})
 
 		Convey("And defragmented back", func() {
-
+			defrgChnks, err := sess.defragmentChunks(largerThanMTU)
+			So(err, ShouldBeNil)
+			So(defrgChnks, ShouldResemble, chnks)
 		})
 
 		Convey("Packet should be written properly", func() {
