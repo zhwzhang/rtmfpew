@@ -22,6 +22,7 @@ import (
 	"container/list"
 	"encoding/binary"
 	"errors"
+	"io"
 	"sync/atomic"
 
 	"github.com/rtmfpew/rtmfpew/config"
@@ -61,6 +62,8 @@ type Session struct {
 
 	HasChecksums bool
 	Established  bool
+
+	fragmented map[vlu.Vlu]*fragmentsBuffer
 
 	fragments     map[vlu.Vlu]*list.List
 	fragmentSizes map[vlu.Vlu]uint16
@@ -104,7 +107,7 @@ func (session *Session) decryptBuffer(buff *bytes.Buffer) error {
 }
 
 // readID reads session ID
-func (session *Session) readID(buff *bytes.Buffer) error {
+func (session *Session) readID(buff io.Reader) error {
 	err := binary.Read(buff, binary.BigEndian, &session.ID)
 	if err != nil {
 		return err
@@ -242,70 +245,6 @@ func (session *Session) WritePacket(pckt Packet, buff *bytes.Buffer) error {
 	return err
 }
 
-func (session *Session) parseBytesToChunks(buff *bytes.Buffer) (chnks *list.List, err error) {
-	chnks = list.New()
-	var c Chunk
-loop:
-	for chunkType := byte(0); ; {
-		if chunkType, err = buff.ReadByte(); err != nil {
-			return
-		}
-
-		switch chunkType {
-		case chunks.BufferProbeChunkType:
-			c = &chunks.BufferProbeChunk{}
-		case chunks.DataAcknowledgementBitmapChunkType:
-			c = &chunks.DataAcknowledgementBitmapChunk{}
-		case chunks.DataAcknowledgementRangesChunkType:
-			c = &chunks.DataAcknowledgementRangesChunk{}
-		case chunks.FlowExceptionReportChunkType:
-			c = &chunks.FlowExceptionReportChunk{}
-		case chunks.ForwardedHelloChunkType:
-			c = &chunks.ForwardedHelloChunk{}
-		case chunks.InitiatorHelloChunkType:
-			c = &chunks.InitiatorHelloChunk{}
-		case chunks.InitiatorInitialKeyingChunkType:
-			c = &chunks.InitiatorInitialKeyingChunk{}
-		case chunks.NextUserDataChunkType:
-			c = &chunks.NextUserDataChunk{}
-		case chunks.PingReplyChunkType:
-			c = &chunks.PingReplyChunk{}
-		case chunks.PingChunkType:
-			c = &chunks.PingChunk{}
-		case chunks.ResponderHelloChunkType:
-			c = &chunks.ResponderHelloChunk{}
-		case chunks.ResponderInitialKeyingChunkType:
-			c = &chunks.ResponderInitialKeyingChunk{}
-		case chunks.ResponderRedirectChunkType:
-			c = &chunks.ResponderRedirectChunk{}
-		case chunks.SessionCloseAcknowledgementType:
-			c = &chunks.SessionCloseAcknowledgement{}
-		case chunks.SessionCloseRequestChunkType:
-			c = &chunks.SessionCloseRequestChunk{}
-		case chunks.UserDataChunkType:
-			c = &chunks.UserDataChunk{}
-		case chunks.FragmentChunkType:
-			c = &chunks.FragmentChunk{}
-			if err = c.ReadFrom(buff); err != nil {
-				return
-			}
-			if session.fragments[c.PacketID] == nil {
-				session.fragments[c.PacketID] = list.New()
-			}
-
-			//todo: more operations
-			continue
-		default:
-			break loop
-		}
-		if err = c.ReadFrom(buff); err != nil {
-			return
-		}
-		chnks.PushBack(c)
-	}
-	return
-}
-
 // ReadPacket reads packet from the byte buffer
 func (session *Session) ReadPacket(buff *bytes.Buffer) (*Packet, error) {
 	pckt := &Packet{}
@@ -319,8 +258,6 @@ func (session *Session) ReadPacket(buff *bytes.Buffer) (*Packet, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	pckt.Chunks = list.New()
 
 	checksum := uint16(0)
 	if session.HasChecksums {
@@ -338,7 +275,36 @@ func (session *Session) ReadPacket(buff *bytes.Buffer) (*Packet, error) {
 		return pckt, errors.New("Only Responder and Startup packet modes are allowed")
 	}
 
-	datalen := uint16(0)
+	if err = pckt.readChunks(buff); err != nil {
+		return pckt, err
+	}
+
+
+
+//	datalen := uint16(0) // todo: what for?
+	for node := pckt.Chunks.Front(); node != nil; node.Next() {
+		switch node.Value.(Chunk).Type() {
+		case chunks.FragmentChunkType:
+			chunk := node.Value.(*FragmentChunk)
+			if len(chunk.Fragment) < 1 {
+				continue
+			}
+			if session.fragmented[chunk.PacketID] == nil { // todo: limit concurrent buffers for reassembling
+				session.fragmented[chunk.PacketID] = CreateNewFragmentsBuffer(chunk)
+			}
+			buff := session.fragmented[chunk.PacketID] // todo: later RWMutex will be needed for concurrent access
+			buff.Add(chunk)
+			switch {
+			case buff.Size > maxFragmentsSize:
+				continue // todo: delete from fragmented map or not?
+			case buff.Len() > maxFragments:
+				continue
+			case !buff.IsComplete():
+				continue
+			}
+			// todo: reassemble packet, check it and return
+		}
+	}
 
 	typ := byte(0)
 	for {

@@ -22,6 +22,8 @@ import (
 	"encoding/binary"
 
 	"github.com/rtmfpew/amfy/vlu"
+	"github.com/rtmfpew/rtmfpew/protocol/chunks"
+	"io"
 )
 
 const (
@@ -133,6 +135,63 @@ func (pckt *Packet) readFrom(buffer *bytes.Buffer) error {
 	}
 
 	return nil
+}
+
+func (p *Packet) readChunks(buff *bytes.Buffer) (err error) {
+	p.Chunks = list.New()
+	var c Chunk
+loop:
+	for chunkType := byte(0); ; {
+		if chunkType, err = buff.ReadByte(); err != nil {
+			if err == io.EOF {
+				err = nil
+			}
+			return
+		}
+		switch chunkType { // todo: reorder descending from most frequent
+		case chunks.BufferProbeChunkType:
+			c = &chunks.BufferProbeChunk{}
+		case chunks.DataAcknowledgementBitmapChunkType:
+			c = &chunks.DataAcknowledgementBitmapChunk{}
+		case chunks.DataAcknowledgementRangesChunkType:
+			c = &chunks.DataAcknowledgementRangesChunk{}
+		case chunks.FlowExceptionReportChunkType:
+			c = &chunks.FlowExceptionReportChunk{}
+		case chunks.ForwardedHelloChunkType:
+			c = &chunks.ForwardedHelloChunk{}
+		case chunks.InitiatorHelloChunkType:
+			c = &chunks.InitiatorHelloChunk{}
+		case chunks.InitiatorInitialKeyingChunkType:
+			c = &chunks.InitiatorInitialKeyingChunk{}
+		case chunks.NextUserDataChunkType:
+			c = &chunks.NextUserDataChunk{}
+		case chunks.PingReplyChunkType:
+			c = &chunks.PingReplyChunk{}
+		case chunks.PingChunkType:
+			c = &chunks.PingChunk{}
+		case chunks.ResponderHelloChunkType:
+			c = &chunks.ResponderHelloChunk{}
+		case chunks.ResponderInitialKeyingChunkType:
+			c = &chunks.ResponderInitialKeyingChunk{}
+		case chunks.ResponderRedirectChunkType:
+			c = &chunks.ResponderRedirectChunk{}
+		case chunks.SessionCloseAcknowledgementType:
+			c = &chunks.SessionCloseAcknowledgement{}
+		case chunks.SessionCloseRequestChunkType:
+			c = &chunks.SessionCloseRequestChunk{}
+		case chunks.UserDataChunkType:
+			c = &chunks.UserDataChunk{}
+		case chunks.FragmentChunkType:
+			c = &chunks.FragmentChunk{}
+		default:
+			break loop
+		}
+		if err = c.ReadFrom(buff); err != nil {
+			return
+		}
+		p.Chunks.PushBack(c)
+	}
+	return
 }
 
 func (pckt *Packet) writeChunkTo(chnk Chunk, buffer *bytes.Buffer) error {
