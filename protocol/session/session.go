@@ -22,13 +22,15 @@ import (
 	"container/list"
 	"encoding/binary"
 	"errors"
+	"sync/atomic"
+
 	"github.com/rtmfpew/rtmfpew/config"
 	"github.com/rtmfpew/rtmfpew/protocol/chunks"
 	"github.com/rtmfpew/rtmfpew/protocol/connection"
 	"github.com/rtmfpew/rtmfpew/protocol/crypto"
 	"github.com/rtmfpew/rtmfpew/protocol/ip"
+
 	"github.com/rtmfpew/amfy/vlu"
-	"sync/atomic"
 )
 
 var (

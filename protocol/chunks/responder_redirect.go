@@ -20,8 +20,9 @@ import (
 	"bytes"
 	"container/list"
 	"encoding/binary"
-	"github.com/rtmfpew/rtmfpew/protocol/connection"
+
 	"github.com/rtmfpew/amfy/vlu"
+	"github.com/rtmfpew/rtmfpew/protocol/connection"
 )
 
 const ResponderRedirectChunkType = 0x71

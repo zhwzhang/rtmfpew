@@ -17,8 +17,9 @@ package chunks
 
 import (
 	"bytes"
-	. "github.com/smartystreets/goconvey/convey"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestFlowExceptionReportIO(t *testing.T) {

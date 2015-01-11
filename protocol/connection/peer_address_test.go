@@ -18,9 +18,10 @@ package connection
 
 import (
 	"bytes"
-	. "github.com/smartystreets/goconvey/convey"
 	"net"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestPeerAddressIO(t *testing.T) {

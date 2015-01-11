@@ -19,6 +19,7 @@ package chunks
 import (
 	"bytes"
 	"encoding/binary"
+
 	"github.com/rtmfpew/amfy/vlu"
 )
 

@@ -17,8 +17,9 @@
 package rtmfp
 
 import (
-	"github.com/rtmfpew/rtmfpew/protocol"
 	"net"
+
+	"github.com/rtmfpew/rtmfpew/protocol"
 )
 
 func serverlessMode() (*protocol.Context, error) {

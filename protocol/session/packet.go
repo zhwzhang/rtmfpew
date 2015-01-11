@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"container/list"
 	"encoding/binary"
+
 	"github.com/rtmfpew/amfy/vlu"
 )
 

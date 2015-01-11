@@ -20,8 +20,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"github.com/rtmfpew/rtmfpew/protocol/connection"
+
 	"github.com/rtmfpew/amfy/vlu"
+	"github.com/rtmfpew/rtmfpew/protocol/connection"
 )
 
 const ForwardedHelloChunkType = 0x0f
