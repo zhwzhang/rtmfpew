@@ -24,6 +24,7 @@ import (
 	"github.com/rtmfpew/amfy/vlu"
 	"github.com/rtmfpew/rtmfpew/protocol/chunks"
 	"io"
+	"sync/atomic"
 )
 
 const (
@@ -64,39 +65,83 @@ type Packet struct {
 	Chunks *list.List
 }
 
+
+
 // These Methods used in session facade
 
-func (pckt *Packet) writeTo(buffer *bytes.Buffer) error {
+func (p *Packet) Len() uint32 {
+	if p.HeaderLength < 1 {
+		p.HeaderLength = 1
+		if p.TimestampPresent {
+			p.HeaderLength++
+		}
+		if p.TimestampEchoPresent {
+			p.HeaderLength++
+		}
+	}
+	if p.DataLength < 1 {
+		for c := p.Chunks.Front(); c != nil; c = c.Next() {
+			p.DataLength += uint32(c.Value.(Chunk).Len())
+		}
+	}
+	return p.HeaderLength + p.DataLength
+}
 
+func (p *Packet) doFragmentation(maxFragmentSize uint16, pcktCounter *uint32) *list.List {
+	maxSize := uint32(maxFragmentSize)
+	pcktLen := p.Len()
+	fragmentsNum := uint16(pcktLen / maxSize)
+	if pcktLen%maxSize > 0 {
+		fragmentsNum++
+	}
+
+	data := make([]byte, pcktLen)
+	buff := bytes.NewBuffer(data)
+	p.writeHeaderTo(buff) // todo: error returning
+	p.writeChunksTo(buff)
+
+	pcktID := atomic.AddUint32(pcktCounter, 1)
+	resultChunks := list.New()
+	for i := uint32(0); i < fragmentsNum; i++ {
+		chnk := &chunks.FragmentChunk{
+			MoreFragments: i == fragmentsNum-1,
+			PacketID:      vlu.Vlu(pcktID),
+			FragmentNum:   vlu.Vlu(i),
+		}
+		if i == fragmentsNum-1 {
+			chnk.Fragment = data[i*maxSize:]
+		} else {
+			chnk.Fragment = data[i*maxSize : (i+1)*maxSize]
+		}
+		resultChunks.PushBack(chnk)
+	}
+	return resultChunks
+}
+
+func (pckt *Packet) writeHeaderTo(buffer *bytes.Buffer) error {
 	flags := byte(0)
-
 	if pckt.TimeCritical {
 		vlu.SetBit(&flags, 7)
 	}
-
 	if pckt.TimeCriticalReserve {
 		vlu.SetBit(&flags, 6)
 	}
-
 	if pckt.TimestampPresent {
 		vlu.SetBit(&flags, 3)
 	}
-
 	if pckt.TimestampEchoPresent {
 		vlu.SetBit(&flags, 2)
 	}
-
 	flags = flags | pckt.Mode
 
-	pckt.HeaderLength = 1
+	buffer.WriteByte(flags) // todo: error returning
+
 	if pckt.TimestampPresent {
 		binary.Write(buffer, binary.BigEndian, pckt.Timestamp)
-		pckt.HeaderLength++
 	}
 
 	if pckt.TimestampEchoPresent {
 		binary.Write(buffer, binary.BigEndian, pckt.TimestampEcho)
-		pckt.HeaderLength++
 	}
 
 	return nil
@@ -192,6 +237,15 @@ loop:
 		p.Chunks.PushBack(c)
 	}
 	return
+}
+
+func (p *Packet) writeChunksTo(buff *bytes.Buffer) error {
+	for c := p.Chunks.Front(); c != nil; c = c.Next() {
+		if err := c.Value.(Chunk).WriteTo(buff); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (pckt *Packet) writeChunkTo(chnk Chunk, buffer *bytes.Buffer) error {

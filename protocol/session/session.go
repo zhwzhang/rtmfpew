@@ -206,15 +206,24 @@ func (session *Session) WritePacket(pckt Packet, buff *bytes.Buffer) error {
 		binary.Write(buff, binary.BigEndian, uint16(0))
 	}
 
-	pckt.Chunks = session.fragmentChunks(pckt.Chunks)
+	if pckt.Len() > uint32(session.mtu) {
+		// todo: error handling
+		pckt.Chunks := pckt.doFragmentation(session.mtu, &session.pcktCounter)
+	}
 
-	pckt.writeTo(buff)
+	pckt.writeHeaderTo(buff) // todo: error handling
+	pckt.writeChunksTo(buff)
+
+	//pckt.Chunks = session.fragmentChunks(pckt.Chunks)
+
+	//pckt.writeTo(buff)
+	/*
 	for c := pckt.Chunks.Front(); c != nil; c = c.Next() {
 		err := pckt.writeChunkTo(c.Value.(Chunk), buff)
 		if err != nil {
 			return err
 		}
-	}
+	}*/
 
 	err := pckt.writePaddingTo(buff)
 	if err != nil {
