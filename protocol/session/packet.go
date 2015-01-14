@@ -87,21 +87,29 @@ func (p *Packet) Len() uint32 {
 	return p.HeaderLength + p.DataLength
 }
 
-func (p *Packet) doFragmentation(maxFragmentSize uint16, pcktCounter *uint32) *list.List {
+func (p *Packet) doFragmentation(
+	maxFragmentSize uint16, pcktCounter *uint32,
+) (fragmentChunks *list.List, err error) {
 	maxSize := uint32(maxFragmentSize)
 	pcktLen := p.Len()
-	fragmentsNum := uint16(pcktLen / maxSize)
+	fragmentsNum := uint32(pcktLen / maxSize)
 	if pcktLen%maxSize > 0 {
 		fragmentsNum++
 	}
 
 	data := make([]byte, pcktLen)
 	buff := bytes.NewBuffer(data)
-	p.writeHeaderTo(buff) // todo: error returning
-	p.writeChunksTo(buff)
+	err = p.writeHeaderTo(buff)
+	if err != nil {
+		return nil, err
+	}
+	err = p.writeChunksTo(buff)
+	if err != nil {
+		return nil, err
+	}
 
 	pcktID := atomic.AddUint32(pcktCounter, 1)
-	resultChunks := list.New()
+	fragmentChunks = list.New()
 	for i := uint32(0); i < fragmentsNum; i++ {
 		chnk := &chunks.FragmentChunk{
 			MoreFragments: i == fragmentsNum-1,
@@ -113,9 +121,9 @@ func (p *Packet) doFragmentation(maxFragmentSize uint16, pcktCounter *uint32) *l
 		} else {
 			chnk.Fragment = data[i*maxSize : (i+1)*maxSize]
 		}
-		resultChunks.PushBack(chnk)
+		fragmentChunks.PushBack(chnk)
 	}
-	return resultChunks
+	return
 }
 
 func (pckt *Packet) writeHeaderTo(buffer *bytes.Buffer) error {
@@ -134,18 +142,45 @@ func (pckt *Packet) writeHeaderTo(buffer *bytes.Buffer) error {
 	}
 	flags = flags | pckt.Mode
 
-	buffer.WriteByte(flags) // todo: error returning
+	buffer.WriteByte(flags) // always returns nil
 
 	if pckt.TimestampPresent {
-		binary.Write(buffer, binary.BigEndian, pckt.Timestamp)
+		err := binary.Write(buffer, binary.BigEndian, pckt.Timestamp)
+		if err != nil {
+			return err
+		}
 	}
 
 	if pckt.TimestampEchoPresent {
-		binary.Write(buffer, binary.BigEndian, pckt.TimestampEcho)
+		err := binary.Write(buffer, binary.BigEndian, pckt.TimestampEcho)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
+
+func (p *Packet) writeChunksTo(buff *bytes.Buffer) error {
+	for c := p.Chunks.Front(); c != nil; c = c.Next() {
+		if err := c.Value.(Chunk).WriteTo(buff); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (p *Packet) writePaddingTo(buff io.Writer) error {
+	padLen := (p.DataLength+p.HeaderLength-1)%16
+	padding := make([]byte, padLen)
+
+	for i := uint32(0); i < padLen; i++ {
+		padding[i] = 0xFF
+	}
+
+	return binary.Write(buff, binary.BigEndian, padding)
+}
+
 
 func (pckt *Packet) readFrom(buffer *bytes.Buffer) error {
 
@@ -239,15 +274,6 @@ loop:
 	return
 }
 
-func (p *Packet) writeChunksTo(buff *bytes.Buffer) error {
-	for c := p.Chunks.Front(); c != nil; c = c.Next() {
-		if err := c.Value.(Chunk).WriteTo(buff); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (pckt *Packet) writeChunkTo(chnk Chunk, buffer *bytes.Buffer) error {
 	lenBefore := buffer.Len()
 	err := chnk.WriteTo(buffer)
@@ -259,12 +285,3 @@ func (pckt *Packet) writeChunkTo(chnk Chunk, buffer *bytes.Buffer) error {
 	return nil
 }
 
-func (pckt *Packet) writePaddingTo(buffer *bytes.Buffer) error {
-	padding := make([]byte, (pckt.DataLength+pckt.HeaderLength-1)%16)
-
-	for i := uint32(0); i < (pckt.DataLength+pckt.HeaderLength-1)%16; i++ {
-		padding[i] = 0xFF
-	}
-
-	return binary.Write(buffer, binary.BigEndian, padding)
-}

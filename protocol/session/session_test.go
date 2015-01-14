@@ -26,33 +26,38 @@ import (
 )
 
 func TestSessionChunksFragmentation(t *testing.T) {
-	Convey("Given a set of chunks", t, func() {
-		chnks := list.New()
+	Convey("Given a packet with set of chunks", t, func() {
+		pckt := &Packet{Chunks: list.New()}
 		for i := 0; i < 3; i++ {
-			chnks.PushBack(chunks.InitiatorHelloChunkSample()) // len is 12
+			pckt.Chunks.PushBack(chunks.InitiatorHelloChunkSample())
 		}
 		sess := &Session{mtu: 20}
-		largerThanMTU := sess.fragmentChunks(chnks)
 
-		Convey("They should be fragmented properly", func() {
-			fitMTU := (&Session{mtu: 100}).fragmentChunks(chnks)
 
-			So(fitMTU, ShouldResemble, chnks)
-			So(largerThanMTU.Len(), ShouldEqual, 2)
+		Convey("It should be fragmented properly", func() {
+			chnks, err := pckt.doFragmentation(sess.mtu, &sess.pcktCounter)
+			So(err, ShouldBeNil)
+			So(chnks, ShouldNotBeNil)
+			So(chnks.Len(), ShouldEqual, 2)
+			fragmentedPckt := &Packet{Chunks:chnks}
+			Convey("And fragmets should be sorted properly", func() {
+				i := uint32(0)
+				for chnk := fragmentedPckt.Chunks.Front(); chnk != nil; chnk = chnk.Next() {
+					packetID := uint32(chnk.Value.(*chunks.FragmentChunk).PacketID)
+					frgNum := uint32(chnk.Value.(*chunks.FragmentChunk).FragmentNum)
+
+					So(packetID, ShouldEqual, sess.pcktCounter)
+					So(frgNum, ShouldEqual, i)
+
+					i++
+				}
+			})
 		})
 
-		Convey("Fragments should be sorted", func() {
-			i := uint32(0)
-			for chnk := largerThanMTU.Front(); chnk != nil; chnk = chnk.Next() {
-				packetID := uint32(chnk.Value.(*chunks.FragmentChunk).PacketID)
-				frgNum := uint32(chnk.Value.(*chunks.FragmentChunk).FragmentNum)
+		Convey("Packet should be written properly", func() {
 
-				So(packetID, ShouldEqual, sess.pcktCounter)
-				So(frgNum, ShouldEqual, i)
-
-				i++
-			}
 		})
+
 
 		Convey("And defragmented back", func() {
 			//	defrgChnks, err := sess.defragmentChunks(largerThanMTU)
@@ -60,9 +65,7 @@ func TestSessionChunksFragmentation(t *testing.T) {
 			//	So(defrgChnks, ShouldResemble, chnks)
 		})
 
-		Convey("Packet should be written properly", func() {
 
-		})
 
 		Convey("And read back", func() {
 

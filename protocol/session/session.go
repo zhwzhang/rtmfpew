@@ -182,7 +182,7 @@ func (session *Session) defragmentChunks(chnks *list.List) (*list.List, error) {
 	defragmentBuff.Reset()
 
 	pckt := &Packet{}
-	pckt.writeTo(defragmentBuff)
+	pckt.writeHeaderTo(defragmentBuff)
 
 	for chunk := chnks.Front(); chunk != nil; chunk.Next() {
 		_, err := defragmentBuff.Write(chunk.Value.(*chunks.FragmentChunk).Fragment)
@@ -200,19 +200,36 @@ func (session *Session) defragmentChunks(chnks *list.List) (*list.List, error) {
 // WritePacket Writes packet into the byte buffer
 func (session *Session) WritePacket(pckt Packet, buff *bytes.Buffer) error {
 
-	binary.Write(buff, binary.BigEndian, uint32(0))
+	err := binary.Write(buff, binary.BigEndian, uint32(0))
+	if err != nil {
+		return err
+	}
 
-	if session.HasChecksums {
+	if session.HasChecksums { // todo: error handling
 		binary.Write(buff, binary.BigEndian, uint16(0))
 	}
 
 	if pckt.Len() > uint32(session.mtu) {
-		// todo: error handling
-		pckt.Chunks := pckt.doFragmentation(session.mtu, &session.pcktCounter)
+		pckt.Chunks, err = pckt.doFragmentation(session.mtu, &session.pcktCounter)
+		if err != nil {
+			return err
+		}
 	}
 
-	pckt.writeHeaderTo(buff) // todo: error handling
-	pckt.writeChunksTo(buff)
+	err = pckt.writeHeaderTo(buff)
+	if err != nil {
+		return err
+	}
+
+	err = pckt.writeChunksTo(buff)
+	if err != nil {
+		return err
+	}
+
+	err = pckt.writePaddingTo(buff)
+	if err != nil {
+		return err
+	}
 
 	//pckt.Chunks = session.fragmentChunks(pckt.Chunks)
 
@@ -225,18 +242,17 @@ func (session *Session) WritePacket(pckt Packet, buff *bytes.Buffer) error {
 		}
 	}*/
 
-	err := pckt.writePaddingTo(buff)
-	if err != nil {
-		return err
-	}
 
-	peeker := bufio.NewReader(buff)
-	data, err := peeker.Peek(peeker.Buffered())
-	if err != nil {
-		return err
-	}
 
-	if session.HasChecksums {
+
+
+	if session.HasChecksums { // todo: ask & reimplement
+		peeker := bufio.NewReader(buff) // default bufio buffer size is 4096
+		data, err := peeker.Peek(peeker.Buffered())
+		if err != nil {
+			return err
+		}
+
 		if err = binary.Write(bytes.NewBuffer(buff.Bytes()),
 			binary.BigEndian,
 			ip.Checksum(data)); err != nil {
@@ -244,14 +260,17 @@ func (session *Session) WritePacket(pckt Packet, buff *bytes.Buffer) error {
 		}
 	}
 
+	// TODO: implement encryption as separate operation ... maybe
+	/*
 	err = session.encryptBuffer(buff)
 	if err != nil {
 		return err
 	}
 
 	err = session.writeID(buff)
+	*/
 
-	return err
+	return nil
 }
 
 // ReadPacket reads packet from the byte buffer
@@ -290,7 +309,8 @@ func (session *Session) ReadPacket(buff *bytes.Buffer) (*Packet, error) {
 
 
 
-//	datalen := uint16(0) // todo: what for?
+	datalen := uint16(0) // todo: what for?
+	/*
 	for node := pckt.Chunks.Front(); node != nil; node.Next() {
 		switch node.Value.(Chunk).Type() {
 		case chunks.FragmentChunkType:
@@ -314,7 +334,7 @@ func (session *Session) ReadPacket(buff *bytes.Buffer) (*Packet, error) {
 			// todo: reassemble packet, check it and return
 		}
 	}
-
+*/
 	typ := byte(0)
 	for {
 
