@@ -109,7 +109,8 @@ func (chnk *FragmentChunk) ReadFrom(buffer *bytes.Buffer) error {
 		return err
 	}
 
-	fragmentLength := (int(length) - chnk.PacketID.ByteLength() - chnk.FragmentNum.ByteLength())
+	fragmentLength := int(length) -
+		1 - chnk.PacketID.ByteLength() - chnk.FragmentNum.ByteLength()
 	chnk.Fragment = make([]byte, fragmentLength)
 
 	if _, err = buffer.Read(chnk.Fragment); err != nil {

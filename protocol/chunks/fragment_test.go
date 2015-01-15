@@ -45,13 +45,7 @@ func TestFragmentIO(t *testing.T) {
 			err = readChnk.ReadFrom(buff)
 			So(err, ShouldBeNil)
 
-			So(readChnk.MoreFragments, ShouldEqual, chnk.MoreFragments)
-			So(uint32(readChnk.PacketID), ShouldEqual, uint32(chnk.PacketID))
-			So(uint32(readChnk.FragmentNum), ShouldEqual, uint32(chnk.FragmentNum))
-
-			for i := range chnk.Fragment {
-				So(readChnk.Fragment[i], ShouldEqual, chnk.Fragment[i])
-			}
+			So(readChnk, ShouldResemble, chnk)
 		})
 	})
 }

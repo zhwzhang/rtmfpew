@@ -20,11 +20,12 @@ import (
 	"bytes"
 	"container/list"
 	"encoding/binary"
-
-	"github.com/rtmfpew/amfy/vlu"
-	"github.com/rtmfpew/rtmfpew/protocol/chunks"
 	"io"
 	"sync/atomic"
+
+	"github.com/rtmfpew/rtmfpew/protocol/chunks"
+
+	"github.com/rtmfpew/amfy/vlu"
 )
 
 const (
@@ -65,8 +66,6 @@ type Packet struct {
 	Chunks *list.List
 }
 
-
-
 // These Methods used in session facade
 
 func (p *Packet) Len() uint32 {
@@ -97,8 +96,7 @@ func (p *Packet) doFragmentation(
 		fragmentsNum++
 	}
 
-	data := make([]byte, pcktLen)
-	buff := bytes.NewBuffer(data)
+	buff := bytes.NewBuffer(make([]byte, 0, pcktLen))
 	err = p.writeHeaderTo(buff)
 	if err != nil {
 		return nil, err
@@ -110,6 +108,7 @@ func (p *Packet) doFragmentation(
 
 	pcktID := atomic.AddUint32(pcktCounter, 1)
 	fragmentChunks = list.New()
+	data := buff.Bytes()
 	for i := uint32(0); i < fragmentsNum; i++ {
 		chnk := &chunks.FragmentChunk{
 			MoreFragments: i == fragmentsNum-1,
@@ -171,7 +170,7 @@ func (p *Packet) writeChunksTo(buff *bytes.Buffer) error {
 }
 
 func (p *Packet) writePaddingTo(buff io.Writer) error {
-	padLen := (p.DataLength+p.HeaderLength-1)%16
+	padLen := (p.DataLength + p.HeaderLength - 1) % 16
 	padding := make([]byte, padLen)
 
 	for i := uint32(0); i < padLen; i++ {
@@ -180,7 +179,6 @@ func (p *Packet) writePaddingTo(buff io.Writer) error {
 
 	return binary.Write(buff, binary.BigEndian, padding)
 }
-
 
 func (pckt *Packet) readFrom(buffer *bytes.Buffer) error {
 
@@ -284,4 +282,3 @@ func (pckt *Packet) writeChunkTo(chnk Chunk, buffer *bytes.Buffer) error {
 	pckt.DataLength += uint32(buffer.Len() - lenBefore)
 	return nil
 }
-

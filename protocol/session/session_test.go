@@ -27,20 +27,20 @@ import (
 
 func TestSessionChunksFragmentation(t *testing.T) {
 	Convey("Given a packet with set of chunks", t, func() {
+		sess := &Session{mtu: 20}
 		pckt := &Packet{Chunks: list.New()}
 		for i := 0; i < 3; i++ {
 			pckt.Chunks.PushBack(chunks.InitiatorHelloChunkSample())
 		}
-		sess := &Session{mtu: 20}
-
 
 		Convey("It should be fragmented properly", func() {
 			chnks, err := pckt.doFragmentation(sess.mtu, &sess.pcktCounter)
 			So(err, ShouldBeNil)
 			So(chnks, ShouldNotBeNil)
 			So(chnks.Len(), ShouldEqual, 2)
-			fragmentedPckt := &Packet{Chunks:chnks}
-			Convey("And fragmets should be sorted properly", func() {
+			fragmentedPckt := &Packet{Chunks: chnks}
+
+			Convey("With properly sorted fragments", func() {
 				i := uint32(0)
 				for chnk := fragmentedPckt.Chunks.Front(); chnk != nil; chnk = chnk.Next() {
 					packetID := uint32(chnk.Value.(*chunks.FragmentChunk).PacketID)
@@ -52,20 +52,29 @@ func TestSessionChunksFragmentation(t *testing.T) {
 					i++
 				}
 			})
+
+			Convey("And defragmented back", func() {
+				buff := &fragmentsBuffer{}
+				for chnk := fragmentedPckt.Chunks.Front(); chnk != nil; chnk = chnk.Next() {
+					buff.Add(chnk.Value.(*chunks.FragmentChunk))
+				}
+				defragmentedPckt, err := sess.reassemblePacket(buff)
+
+				So(err, ShouldBeNil)
+				So(defragmentedPckt.TimeCritical, ShouldEqual, pckt.TimeCritical)
+				So(defragmentedPckt.TimeCriticalReserve, ShouldEqual, pckt.TimeCriticalReserve)
+				So(defragmentedPckt.Timestamp, ShouldEqual, pckt.Timestamp)
+				So(defragmentedPckt.TimestampEcho, ShouldEqual, pckt.TimestampEcho)
+				So(defragmentedPckt.TimestampPresent, ShouldEqual, pckt.TimestampPresent)
+				So(defragmentedPckt.TimestampEchoPresent, ShouldEqual, pckt.TimestampEchoPresent)
+				So(defragmentedPckt.Mode, ShouldEqual, pckt.Mode)
+				So(defragmentedPckt.Chunks, ShouldResemble, pckt.Chunks)
+			})
 		})
 
 		Convey("Packet should be written properly", func() {
 
 		})
-
-
-		Convey("And defragmented back", func() {
-			//	defrgChnks, err := sess.defragmentChunks(largerThanMTU)
-			//	So(err, ShouldBeNil)
-			//	So(defrgChnks, ShouldResemble, chnks)
-		})
-
-
 
 		Convey("And read back", func() {
 
